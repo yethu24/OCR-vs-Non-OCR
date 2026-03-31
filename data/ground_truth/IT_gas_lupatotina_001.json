@@ -1,0 +1,19 @@
+{
+  "document_id": "IT_gas_lupatotina_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-03-30",
+  "fields": {
+    "provider_name": "Lupatotina Gas e Luce",
+    "utility_type": "gas",
+    "bill_number": "20250100132028",
+    "bill_date": "2025-11-14",
+    "billing_period_start": "2025-10-01",
+    "billing_period_end": "2025-10-31",
+    "due_date": "2025-12-12",
+    "total_amount_due": 36.64,
+    "currency": "EUR",
+    "account_number": "7702752000",
+    "consumption_amount": 19.685653,
+    "consumption_unit": "SMC"
+  }
+}

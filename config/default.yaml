@@ -1,0 +1,26 @@
+pipeline:
+  mode: "ocr_text"                # "ocr_text" or "vision"
+
+ocr:
+  engine: "tesseract"             # Extensible: "easyocr", "paddleocr"
+  # Language is NOT configured here — read per-document from the manifest
+  preprocessing:
+    enabled: false
+    steps: []                     # Future: ["grayscale", "binarize", "deskew"]
+
+llm:
+  provider: "openai"              # "openai", "google", "anthropic"
+  model: "gpt-4o"                 # Provider-specific model name
+  temperature: 0.0
+  max_tokens: 2000
+  structured_output: true
+  prompt_file: "prompts/extraction_v1.txt"
+
+data:
+  manifest: "data/dataset_manifest.csv"
+  bills_dir: "data/bills"
+  ground_truth_dir: "data/ground_truth"
+
+output:
+  results_dir: "results/runs"
+  save_intermediate: true

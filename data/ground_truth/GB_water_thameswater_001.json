@@ -1,0 +1,19 @@
+{
+  "document_id": "GB_water_thameswater_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-03-30",
+  "fields": {
+    "provider_name": "Thames Water",
+    "utility_type": "water",
+    "bill_number": null,
+    "bill_date": "2026-01-30",
+    "billing_period_start": "2025-07-30",
+    "billing_period_end": "2026-01-29",
+    "due_date": "2026-02-19",
+    "total_amount_due": 290.96,
+    "currency": "GBP",
+    "account_number": "900083797515",
+    "consumption_amount": 48.0,
+    "consumption_unit": "m3"
+  }
+}

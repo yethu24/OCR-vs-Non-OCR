@@ -1,0 +1,15 @@
+pydantic>=2.0
+pyyaml
+pdf2image
+Pillow
+pytesseract
+openai
+google-generativeai
+anthropic
+python-Levenshtein
+psutil
+matplotlib
+seaborn
+click
+pytest
+python-dotenv

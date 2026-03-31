@@ -1,0 +1,19 @@
+{
+  "document_id": "IT_electricity_lupatotina_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-03-30",
+  "fields": {
+    "provider_name": "Lupatotina Gas e Luce",
+    "utility_type": "electricity",
+    "bill_number": "20250200119928",
+    "bill_date": "2025-11-03",
+    "billing_period_start": "2025-09-01",
+    "billing_period_end": "2025-09-30",
+    "due_date": "2025-11-27",
+    "total_amount_due": 65.88,
+    "currency": "EUR",
+    "account_number": "77020000020331",
+    "consumption_amount": 183.0,
+    "consumption_unit": "kWh"
+  }
+}

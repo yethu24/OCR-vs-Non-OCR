@@ -1,0 +1,19 @@
+{
+  "document_id": "GB_electricity_ovo_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-03-30",
+  "fields": {
+    "provider_name": "OVO Energy Ltd",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": "2026-03-10",
+    "billing_period_start": "2025-12-18",
+    "billing_period_end": "2026-01-17",
+    "due_date": null,
+    "total_amount_due": 177.53,
+    "currency": "GBP",
+    "account_number": "26447122",
+    "consumption_amount": 572.502,
+    "consumption_unit": "kWh"
+  }
+}

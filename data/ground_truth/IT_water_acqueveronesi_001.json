@@ -1,0 +1,19 @@
+{
+  "document_id": "IT_water_acqueveronesi_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-03-30",
+  "fields": {
+    "provider_name": "Acque Veronesi s.c. a r.l.",
+    "utility_type": "water",
+    "bill_number": "0001/2025/01405039",
+    "bill_date": "2025-11-25",
+    "billing_period_start": "2025-09-04",
+    "billing_period_end": "2025-11-25",
+    "due_date": "2026-01-08",
+    "total_amount_due": 45.69,
+    "currency": "EUR",
+    "account_number": "1501600",
+    "consumption_amount": 16.0,
+    "consumption_unit": "mc"
+  }
+}

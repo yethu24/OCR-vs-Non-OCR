@@ -1,0 +1,6 @@
+document_id,language,utility_type,provider,digital_native,page_count,annotated,verified,status
+GB_electricity_ovo_001,en,electricity,OVO Energy,true,3,true,true,active
+GB_water_thameswater_001,en,water,Thames Water,true,6,true,true,active
+IT_electricity_lupatotina_001,it,electricity,Lupatotina Gas e Luce SRL,true,8,true,true,active
+IT_gas_lupatotina_001,it,gas,Lupatotina Gas e Luce SRL,true,1,true,true,active
+IT_water_acqueveronesi_001,it,water,Acque Veronesi,true,4,true,true,active
