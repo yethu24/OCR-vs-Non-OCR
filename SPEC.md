@@ -157,7 +157,6 @@ project_root/
 │   │   ├── __init__.py
 │   │   ├── base.py
 │   │   ├── openai_provider.py
-│   │   ├── google_provider.py
 │   │   └── anthropic_provider.py
 │   ├── normalisation.py
 │   ├── evaluation/
@@ -432,13 +431,15 @@ Delivered:
 - Sample dataset: 5 PDFs in `data/bills/` (2 EN, 3 IT), manifest populated, 5 verified ground truth JSONs in `data/ground_truth/`
 - Smoke-tested: PDF->images, OCR (EN+IT), prompt rendering, DatasetLoader runnable validation
 
-### Session 2: LLM Integration + Prompt System
+### Session 2: LLM Integration + Prompt System -- COMPLETE
 
-- LLM provider interface (`src/llm/base.py`) -- providers receive prompt as input, do not construct their own
-- First provider implementation (e.g., OpenAI -- `src/llm/openai_provider.py`)
-- Second provider implementation (e.g., Google Gemini -- `src/llm/google_provider.py`)
-- Provider registry (config string -> provider class mapping)
-- Manual end-to-end test: one bill through both text and vision modes with one provider
+Delivered:
+- `src/llm/base.py`: `LLMProvider` ABC with `extract_from_text`, `extract_from_image` (list of images for first-2-pages baseline), `get_model_id`, and `encode_image_base64` helper
+- `src/llm/openai_provider.py`: `OpenAIProvider` (text + vision), JSON enforcement via `response_format={"type":"json_object"}`, token + latency tracking
+- `src/llm/anthropic_provider.py`: `AnthropicProvider` (text + vision), token + latency tracking, basic JSON fence stripping for Claude-style ```json blocks
+- `src/llm/registry.py`: `get_provider(config)` factory with lazy imports; supports `llm.provider` = `openai` or `anthropic`
+- `src/llm/__init__.py`: package exports (`LLMProvider`, `get_provider`)
+- `scripts/test_llm_e2e.py`: dev e2e smoke test (1 bill × 4 conditions) with validation and spot-checks\n+  - Defaults to cheaper dev models; override via `OPENAI_E2E_MODEL` / `ANTHROPIC_E2E_MODEL`\n+\n+Known limitation (to harden in Session 3): some providers may prepend prose before the JSON (e.g., \"Here is the JSON...\") which can break strict `json.loads()` unless we extract the JSON object from the raw output.
 
 ### Session 3: Pipeline Orchestrator + CLI
 

@@ -56,7 +56,7 @@ This project includes a manual end-to-end dev test script: `scripts/test_llm_e2e
 
 - **Defaults (cost-control / dev)**:
   - OpenAI: `gpt-4o-mini`
-  - Anthropic: `claude-3-5-haiku`
+  - Anthropic: `claude-3-haiku-20240307` (example; use whatever Haiku model ID works for your account)
 - **Override to baseline models** (locked for experiments in `SPEC.md`):
 
 ```bash
