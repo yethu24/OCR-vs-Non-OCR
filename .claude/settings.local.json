@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(source .venv/Scripts/activate)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python scripts/test_llm_e2e.py)"
+    ]
+  }
+}

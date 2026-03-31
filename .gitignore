@@ -21,6 +21,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
+# Data / PII
+data/bills/
+
 # Results / artefacts
 results/runs/
 results/reports/

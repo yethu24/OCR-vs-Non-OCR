@@ -50,6 +50,25 @@ python -c "import yaml, pydantic, pdf2image, PIL, pytesseract; print('ok')"
 python -m pytest tests/ -v
 ```
 
+## Dev E2E Smoke Test (LLM calls; costs money)
+
+This project includes a manual end-to-end dev test script: `scripts/test_llm_e2e.py`.
+
+- **Defaults (cost-control / dev)**:
+  - OpenAI: `gpt-4o-mini`
+  - Anthropic: `claude-3-5-haiku`
+- **Override to baseline models** (locked for experiments in `SPEC.md`):
+
+```bash
+OPENAI_E2E_MODEL=gpt-4o ANTHROPIC_E2E_MODEL=claude-3-5-sonnet python scripts/test_llm_e2e.py
+```
+
+Run with defaults:
+
+```bash
+python scripts/test_llm_e2e.py
+```
+
 ## Project Layout
 
 ```
