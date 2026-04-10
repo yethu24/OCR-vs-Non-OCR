@@ -17,6 +17,7 @@ def load_env() -> None:
         # Optional at runtime; required for local development convenience.
         return
 
+    # Walk up from src/ to the project root to find .env
     project_root = Path(__file__).resolve().parents[1]
     dotenv_path = project_root / ".env"
     if dotenv_path.exists():

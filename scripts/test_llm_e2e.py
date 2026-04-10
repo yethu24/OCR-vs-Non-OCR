@@ -45,7 +45,7 @@ PROMPT_FILE = project_root / "prompts" / "extraction_v1.txt"
 GROUND_TRUTH = project_root / "data" / "ground_truth" / "GB_electricity_ovo_001.json"
 MAX_VISION_PAGES = 2
 OPENAI_MODEL = os.getenv("OPENAI_E2E_MODEL", "gpt-4o-mini")
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_E2E_MODEL", "claude-3-haiku-20240307")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_E2E_MODEL", "claude-haiku-4-5-20251001")
 
 # ── Shared preparation ───────────────────────────────────────────────
 print("=" * 70)
@@ -71,9 +71,8 @@ ocr_texts = [ocr_engine.extract_text(img, language="en") for img in all_images]
 ocr_text = "\n\n".join(ocr_texts)
 print(f"  OCR text length: {len(ocr_text)} chars")
 
-# Render prompts
-prompt_text_mode = template.format(schema_description=schema_desc, ocr_text=ocr_text)
-prompt_vision_mode = template.format(schema_description=schema_desc, ocr_text="")
+# Render prompt (instructions only — OCR text goes in the user message)
+prompt = template.format(schema_description=schema_desc)
 
 # Load ground truth for spot-check
 gt = json.loads(GROUND_TRUTH.read_text(encoding="utf-8"))["fields"]
@@ -135,7 +134,7 @@ try:
     from src.llm.openai_provider import OpenAIProvider
 
     openai_provider = OpenAIProvider(model=OPENAI_MODEL, temperature=0.0, max_tokens=2000)
-    result_1 = openai_provider.extract_from_text(ocr_text, prompt_text_mode)
+    result_1 = openai_provider.extract_from_text(ocr_text, prompt)
     validate_result("OpenAI / text mode (OCR-based)", result_1)
 except Exception as exc:
     print(f"  FAILED: {exc}")
@@ -146,7 +145,7 @@ print("\n\n[2/4] OpenAI vision mode …")
 try:
     if openai_provider is None:
         openai_provider = OpenAIProvider(model=OPENAI_MODEL, temperature=0.0, max_tokens=2000)
-    result_2 = openai_provider.extract_from_image(vision_images, prompt_vision_mode)
+    result_2 = openai_provider.extract_from_image(vision_images, prompt)
     validate_result("OpenAI / vision mode (OCR-free)", result_2)
 except Exception as exc:
     print(f"  FAILED: {exc}")
@@ -158,7 +157,7 @@ try:
     from src.llm.anthropic_provider import AnthropicProvider
 
     anthropic_provider = AnthropicProvider(model=ANTHROPIC_MODEL, temperature=0.0, max_tokens=2000)
-    result_3 = anthropic_provider.extract_from_text(ocr_text, prompt_text_mode)
+    result_3 = anthropic_provider.extract_from_text(ocr_text, prompt)
     validate_result("Anthropic / text mode (OCR-based)", result_3)
 except Exception as exc:
     print(f"  FAILED: {exc}")
@@ -169,7 +168,7 @@ print("\n\n[4/4] Anthropic vision mode …")
 try:
     if anthropic_provider is None:
         anthropic_provider = AnthropicProvider(model=ANTHROPIC_MODEL, temperature=0.0, max_tokens=2000)
-    result_4 = anthropic_provider.extract_from_image(vision_images, prompt_vision_mode)
+    result_4 = anthropic_provider.extract_from_image(vision_images, prompt)
     validate_result("Anthropic / vision mode (OCR-free)", result_4)
 except Exception as exc:
     print(f"  FAILED: {exc}")

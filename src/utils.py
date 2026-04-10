@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def load_config(config_path: str | Path, overrides: dict | None = None) -> dict:
     """Load a YAML config file and optionally merge CLI overrides."""
-    load_env()
+    load_env()  # ensure API keys from .env are available
     path = Path(config_path)
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
@@ -35,7 +35,8 @@ def load_config(config_path: str | Path, overrides: dict | None = None) -> dict:
 
 
 def deep_merge(base: dict, overrides: dict) -> None:
-    """Recursively merge *overrides* into *base* in place."""
+    """Recursively merge *overrides* into *base* in place.
+    CLI flags use this to override specific YAML config values."""
     for key, value in overrides.items():
         if key in base and isinstance(base[key], dict) and isinstance(value, dict):
             deep_merge(base[key], value)
@@ -52,6 +53,7 @@ def pdf_to_images(pdf_path: str | Path, dpi: int = 300) -> list[Image.Image]:
 
     Requires the ``poppler`` system library and the ``pdf2image`` package.
     """
+    # Lazy import — pdf2image pulls in poppler, only needed at runtime
     from pdf2image import convert_from_path
 
     pdf_path = Path(pdf_path)

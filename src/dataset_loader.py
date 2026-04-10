@@ -8,6 +8,7 @@ from .schema import DocumentEntry
 
 logger = logging.getLogger(__name__)
 
+# Every manifest CSV must contain these columns for the loader to accept it
 REQUIRED_COLUMNS = frozenset(
     {
         "document_id",
@@ -50,6 +51,8 @@ class DatasetLoader:
         if not self.manifest_path.exists():
             raise FileNotFoundError(f"Manifest not found: {self.manifest_path}")
 
+        # Sequential validation pipeline: read → check columns → check dupes
+        # → validate values → keep only runnable rows → resolve file paths
         rows = self._read_csv()
         self._validate_columns(rows)
         self._check_duplicate_ids(rows)
@@ -136,6 +139,7 @@ class DatasetLoader:
             )
 
     def _filter_runnable(self, rows: list[dict[str, str]]) -> list[dict[str, str]]:
+        # Only keep rows that are active, annotated, AND verified
         return [
             r
             for r in rows
@@ -145,6 +149,8 @@ class DatasetLoader:
         ]
 
     def _resolve_paths(self, rows: list[dict[str, str]]) -> list[DocumentEntry]:
+        # Convert raw CSV dicts into DocumentEntry objects with resolved
+        # PDF and ground-truth file paths
         entries: list[DocumentEntry] = []
         for r in rows:
             doc_id = r["document_id"].strip()

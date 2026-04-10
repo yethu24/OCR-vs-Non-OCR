@@ -3,6 +3,12 @@
 Every provider must implement two extraction methods (text mode and vision
 mode) plus a metadata accessor.  The return dict shape is identical for both
 extraction methods so downstream code can handle them uniformly.
+
+Provider implementations receive a **rendered instruction prompt** (schema
+description and formatting rules) and the **data payload** (OCR text or page
+images) as separate arguments.  The prompt never contains the raw data — that
+separation keeps the system/developer message clean and avoids duplicate
+tokens.
 """
 
 from __future__ import annotations
@@ -22,11 +28,15 @@ class LLMProvider(ABC):
         model: str,
         temperature: float = 0.0,
         max_tokens: int = 2000,
+        timeout: float = 120.0,
+        max_retries: int = 2,
         **kwargs,
     ) -> None:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.timeout = timeout
+        self.max_retries = max_retries
 
     # ------------------------------------------------------------------
     # Abstract interface
@@ -38,7 +48,8 @@ class LLMProvider(ABC):
 
         Args:
             ocr_text: Raw text produced by the OCR engine.
-            prompt: Fully rendered prompt (schema description already filled).
+            prompt: Rendered instruction prompt (schema description and
+                formatting rules).  Does **not** contain the OCR text.
 
         Returns:
             ``{"raw_output": str, "token_usage": {"input_tokens": int,
@@ -52,7 +63,7 @@ class LLMProvider(ABC):
 
         Args:
             images: List of PIL Images (typically first 2 pages).
-            prompt: Fully rendered prompt (schema description already filled).
+            prompt: Rendered instruction prompt (same as text mode).
 
         Returns:
             Same dict shape as :meth:`extract_from_text`.

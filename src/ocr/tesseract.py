@@ -9,6 +9,7 @@ from .base import OCREngine
 
 logger = logging.getLogger(__name__)
 
+# ISO 639-1 → Tesseract language codes (the dataset uses ISO codes)
 LANGUAGE_MAP: dict[str, str] = {
     "en": "eng",
     "de": "deu",
@@ -26,7 +27,16 @@ class TesseractOCR(OCREngine):
     """
 
     def extract_text(self, image: Image.Image, language: str = "eng") -> str:
+        # Convert ISO code to Tesseract code if needed, otherwise pass through
         tess_lang = LANGUAGE_MAP.get(language, language)
-        logger.debug("Running Tesseract with lang=%s", tess_lang)
-        text: str = pytesseract.image_to_string(image, lang=tess_lang)
-        return text
+        try:
+            text = pytesseract.image_to_string(image, lang=tess_lang)
+            return text
+        except pytesseract.TesseractNotFoundError:
+            raise RuntimeError(
+                "Tesseract not found. Install it and ensure it's on PATH."
+            ) from None
+        except pytesseract.TesseractError as e:
+            logger.warning("Tesseract failed for lang=%s: %s", tess_lang, e)
+            return "" 
+

@@ -10,9 +10,9 @@ from typing import Type
 
 from .base import LLMProvider
 
-# Lazy imports are used inside the factory to avoid importing SDK
-# packages (openai, anthropic) unless the provider is actually requested.
-
+# Maps provider name → fully-qualified class path.
+# Lazy-imported at runtime so the openai/anthropic SDKs are only loaded
+# when their provider is actually selected.
 _PROVIDERS: dict[str, str] = {
     "openai": "src.llm.openai_provider.OpenAIProvider",
     "anthropic": "src.llm.anthropic_provider.AnthropicProvider",
@@ -60,4 +60,7 @@ def get_provider(config: dict) -> LLMProvider:
         model=llm_cfg.get("model", ""),
         temperature=llm_cfg.get("temperature", 0.0),
         max_tokens=llm_cfg.get("max_tokens", 2000),
+        vision_detail=llm_cfg.get("vision_detail", "high"),
+        timeout=llm_cfg.get("timeout", 120),
+        max_retries=llm_cfg.get("max_retries", 2),
     )

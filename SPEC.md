@@ -274,16 +274,27 @@ All 12 fields optional (nullable). Includes `schema_description()` classmethod f
 
 ### 8.6 LLMProvider (ABC)
 `extract_from_text(ocr_text, prompt)` — text mode.
-`extract_from_image(image, prompt)` — vision mode.
+`extract_from_image(images, prompt)` — vision mode.
 `get_model_id()` — identifier string.
 
-Providers format the prompt into provider-specific API requests but do not own prompt content.
+Constructor accepts `model`, `temperature`, `max_tokens`, `timeout` (HTTP timeout, default 120 s), and `max_retries` (SDK-level retries, default 2).
+
+The `prompt` argument is the rendered instruction prompt (schema description + formatting rules). It does **not** contain the raw data — OCR text and images are passed as separate arguments and sent in the user message. This separation avoids duplicating input tokens and keeps the system/developer/instruction message clean.
+
+#### Provider API choices
+
+- **OpenAI (`OpenAIProvider`):** Uses the **Responses API** (`client.responses.parse`) with **Structured Outputs** (`text_format=BillExtraction`).  Instructions go in the top-level `instructions` parameter; data goes in the `input` list.  Vision images use `type: "input_image"` with a configurable `detail` parameter (`"high"` by default).  Output length controlled via `max_output_tokens`.  Structured Outputs guarantee schema-valid JSON via constrained decoding.
+- **Anthropic (`AnthropicProvider`):** Uses the **Messages API** (`client.messages.create`) with prompt-instructed JSON output.  Instructions go in the top-level `system` parameter; data goes in the `messages` list.  Output length controlled via `max_tokens` (required by Anthropic API).  Claude may wrap JSON in markdown code fences; `_strip_json_fencing()` removes these before downstream parsing.
+
+The `raw_output` field is populated from the text content of the response for archival and failure diagnosis.  The pipeline's `_parse_llm_json()` provides additional fallback parsing (brace extraction, fence stripping) for robustness.
+
+Providers do not own prompt content — they receive the rendered prompt and format it into provider-specific API requests.
 
 ---
 
 ## 9. Prompt Management
 
-Prompts stored as versioned files in `prompts/`. Selected via `llm.prompt_file` in config. Template placeholders: `{schema_description}`, `{ocr_text}`. Exact prompt archived per run in `results/runs/{run_id}/prompt.txt`.
+Prompts stored as versioned files in `prompts/`. Selected via `llm.prompt_file` in config. Template placeholder: `{schema_description}`. The prompt contains only extraction instructions and the schema description — raw data (OCR text or images) is provided separately in the user message to avoid duplicating input tokens. Exact prompt archived per run in `results/runs/{run_id}/prompt.txt`.
 
 ---
 
@@ -304,6 +315,9 @@ llm:
   max_tokens: 2000
   structured_output: true
   prompt_file: "prompts/extraction_v1.txt"
+  vision_detail: "high"           # OpenAI only: "low", "high", "auto"
+  timeout: 120                    # HTTP timeout in seconds
+  max_retries: 2                  # SDK-level automatic retries
 data:
   manifest: "data/dataset_manifest.csv"
   bills_dir: "data/bills"
@@ -422,52 +436,56 @@ Delivered:
 - `src/schema.py`: `BillExtraction` (12-field Pydantic model with `schema_description()` classmethod, `SCHEMA_FIELDS` class variable), `PipelineResult`, `DocumentEntry` dataclass
 - `src/dataset_loader.py`: `DatasetLoader` with `load_and_validate()` (column validation, duplicate ID check, value validation for language/utility_type/status, `active+annotated+verified` filtering, path resolution, file existence verification) and `load_all()` (for inspection without filtering)
 - `src/utils.py`: `load_config()` with `deep_merge()` for CLI overrides, `pdf_to_images()` via pdf2image/Poppler, `load_prompt_template()`, `read_json()`, `write_json()`, `write_text()`, `copy_file()`, `setup_logging()`
-- `src/normalisation.py`: `normalise_date()` (10 date formats), `normalise_string()`, `normalise_currency()`, `normalise_float()`, `normalise_extraction()` with `FIELD_NORMALISERS` mapping
+- `src/normalisation.py`: `normalise_date()` (`datetime` vs `date`, 10 `strptime` formats, unparseable strings passed through); `normalise_string()` (Unicode NFC, strip, lower, collapse whitespace); `normalise_utility_type()` / `normalise_consumption_unit()` (synonym maps to canonical `electricity`/`gas`/`water` and units e.g. `kWh`, `m3`, `SMC`; unknowns fall back to string rules); `normalise_currency()` (symbol and name map to ISO 4217, then any three-letter `A–Z` code, else `None` + log warning); `normalise_float()` (European vs US comma/dot parsing for strings, `round(..., 2)`); `normalise_extraction()` applies `FIELD_NORMALISERS` (`dict[str, Callable]`) per schema field
 - `src/ocr/base.py`: `OCREngine` ABC with `extract_text(image, language)` interface
 - `src/ocr/tesseract.py`: `TesseractOCR` with `LANGUAGE_MAP` (`en->eng`, `de->deu`, `fr->fra`, `it->ita`)
-- `prompts/extraction_v1.txt`: initial prompt template with `{schema_description}` and `{ocr_text}` placeholders
+- `prompts/extraction_v1.txt`: prompt template with `{schema_description}` placeholder (instructions only — OCR text and images are passed separately in the user message to avoid duplicating input tokens)
 - `src/llm/__init__.py`, `src/evaluation/__init__.py`: package stubs
-- Tests: `test_schema.py` (7 tests), `test_normalisation.py` (16 tests), `test_dataset_loader.py` (14 tests) -- **51 tests, all passing**
+- Tests: `test_schema.py` (7 tests), `test_normalisation.py` (38 tests), `test_dataset_loader.py` (14 tests) -- **59 tests** for Session 1 modules, all passing
 - Sample dataset: 5 PDFs in `data/bills/` (2 EN, 3 IT), manifest populated, 5 verified ground truth JSONs in `data/ground_truth/`
 - Smoke-tested: PDF->images, OCR (EN+IT), prompt rendering, DatasetLoader runnable validation
 
 ### Session 2: LLM Integration + Prompt System -- COMPLETE
 
 Delivered:
-- `src/llm/base.py`: `LLMProvider` ABC with `extract_from_text`, `extract_from_image` (list of images for first-2-pages baseline), `get_model_id`, and `encode_image_base64` helper
-- `src/llm/openai_provider.py`: `OpenAIProvider` (text + vision), JSON enforcement via `response_format={"type":"json_object"}`, token + latency tracking
-- `src/llm/anthropic_provider.py`: `AnthropicProvider` (text + vision), token + latency tracking, basic JSON fence stripping for Claude-style ```json blocks
-- `src/llm/registry.py`: `get_provider(config)` factory with lazy imports; supports `llm.provider` = `openai` or `anthropic`
+- `src/llm/base.py`: `LLMProvider` ABC with `extract_from_text`, `extract_from_image` (list of images for first-2-pages baseline), `get_model_id`, and `encode_image_base64` helper.  Constructor accepts `timeout` and `max_retries` for SDK-level reliability.
+- `src/llm/openai_provider.py`: `OpenAIProvider` using the **Responses API** (`client.responses.parse`) with **Structured Outputs** (`text_format=BillExtraction`).  System instructions via `instructions` parameter; vision images via `type: "input_image"` with configurable `detail` (default `"high"`); output length via `max_output_tokens`.  Token + latency tracking.
+- `src/llm/anthropic_provider.py`: `AnthropicProvider` using the **Messages API** (`client.messages.create`) with prompt-instructed JSON and `_strip_json_fencing()` post-processing.  System instructions via top-level `system` parameter; `max_tokens` (required by Anthropic API).  Token + latency tracking.
+- `src/llm/registry.py`: `get_provider(config)` factory with lazy imports; supports `llm.provider` = `openai` or `anthropic`.  Passes `vision_detail`, `timeout`, `max_retries` from config.
 - `src/llm/__init__.py`: package exports (`LLMProvider`, `get_provider`)
-- `scripts/test_llm_e2e.py`: dev e2e smoke test (1 bill × 4 conditions) with validation and spot-checks\n+  - Defaults to cheaper dev models; override via `OPENAI_E2E_MODEL` / `ANTHROPIC_E2E_MODEL`\n+\n+Known limitation (to harden in Session 3): some providers may prepend prose before the JSON (e.g., \"Here is the JSON...\") which can break strict `json.loads()` unless we extract the JSON object from the raw output.
+- `scripts/test_llm_e2e.py`: dev e2e smoke test (1 bill × 4 conditions) with validation and spot-checks.  Defaults to cheaper dev models; override via `OPENAI_E2E_MODEL` / `ANTHROPIC_E2E_MODEL`.
 
-### Session 3: Pipeline Orchestrator + CLI
+### Session 3: Pipeline Orchestrator + CLI ✅
 
-- `pipeline.py`: orchestrate stages, per-document disk output, resume logic via `extraction.json` existence check
+- `src/pipeline.py`: orchestrator with `run_pipeline()` batch function, `_process_document()` per-doc processing, `_parse_llm_json()` hardened JSON parsing (direct / fence-strip / brace-extraction / diagnostic failure), resume logic via `extraction.json` existence check, error isolation per document
 - `cli.py` with `run` command: `--config` required, optional `--manifest`/`--mode`/`--provider`/`--model` overrides, `--force` flag
-- `performance.py`: timing context manager, token/cost tracking
+- `src/performance.py`: `Timer` context manager, `estimate_cost()` lookup for known models, `get_system_snapshot()` via psutil
 - Run config snapshot + manifest snapshot + prompt copy into run output directory
-- End-to-end test: batch run on 5+ bills, verify complete output structure on disk
+- Per-document output: `extraction.json`, `raw_llm_output.txt`, `ocr_text.txt` (OCR mode), `timings.json`, `metadata.json`, `error.json` (on failure)
 
-### Session 4: Evaluation Module
+### Session 4: Evaluation Module ✅
 
-- `evaluation/metrics.py`: field-level accuracy, document-level accuracy, Levenshtein similarity
-- `evaluation/diagnosis.py`: OCR failure vs LLM failure attribution from disk artefacts
-- `evaluation/comparator.py`: cross-run comparison, aggregate tables, slicing by manifest metadata
-- `cli.py` with `evaluate` and `compare` commands
+Delivered:
+- `src/evaluation/metrics.py`: `FieldResult`, `DocumentResult`, `RunEvaluation` dataclasses; `compare_field()` with null table (both_null/hallucination/omission), float tolerance ±0.01, date exact-match, string exact-match + Levenshtein similarity; `evaluate_document()` normalises both sides via `normalise_extraction()`; `evaluate_run()` walks run directory, loads ground truth, aggregates field-level/document-level/overall accuracy, slices by language and utility_type, writes `evaluation.json`
+- `src/evaluation/diagnosis.py`: `FieldDiagnosis` dataclass; `diagnose_document()` attributes each incorrect field — OCR mode: GT in ocr_text → LLM extraction failure, else OCR failure; vision mode: raw matches GT pre-norm → normalisation failure, else model inference failure; writes `diagnosis.json` per document
+- `src/evaluation/comparator.py`: `compare_runs()` loads/evaluates multiple runs, builds accuracy matrix (per-field across runs), performance matrix (mean timings + cost), null analysis, slice comparison; writes `comparison.json`
+- `src/evaluation/__init__.py`: public exports (`FieldResult`, `DocumentResult`, `RunEvaluation`, `compare_field`, `evaluate_document`, `evaluate_run`, `FieldDiagnosis`, `diagnose_document`, `compare_runs`)
+- `cli.py`: `evaluate` command (`--run-dir`, `--gt-dir`, `--diagnose` flag); `compare` command (`--runs` multiple, `--gt-dir`, `--output`)
+- `tests/test_evaluation.py`: 30 tests covering compare_field null table, float tolerance, Levenshtein, evaluate_document normalisation, evaluate_run disk I/O + slicing, diagnose_document OCR/vision modes, compare_runs report generation — **111 total tests** in `tests/`, all passing
 
 ### Session 5: Run Experiments
 
 - Run all 4 experimental conditions (2 models x 2 modes) on full dataset
 - Verify outputs, fix pipeline bugs
-- Re-run (resume mode) if needed after fixes
 
-### Session 6: Analysis + Visualisation
 
-- `cli.py` with `report` command
-- Comparative tables, charts (accuracy heatmaps, timing bar charts, cost comparison, failure type distribution)
-- Failure diagnosis reports per document
-- Statistical summary (means, std devs, per-language/per-utility-type breakdowns)
+### Session 6: Analysis + Visualisation ✅
+
+Delivered:
+- `src/reporting.py`: `generate_report(comparison_path, output_dir)` reads `comparison.json`, generates 6 charts (matplotlib/seaborn PNG) and a plain-text summary; `_short_label()` derives human-readable run labels (e.g. "GPT-4o OCR", "Sonnet 4.5 Vision") from run IDs
+- Charts: `overall_accuracy.png` (bar), `field_accuracy_heatmap.png` (12 fields × 4 runs), `timing_breakdown.png` (stacked OCR+LLM), `cost_comparison.png` (bar), `accuracy_by_language.png` (grouped bar), `accuracy_by_utility_type.png` (grouped bar)
+- `summary.txt`: results overview table, best/worst metrics, null analysis, accuracy by language, accuracy by utility type, full field-level accuracy table
+- `cli.py` with `report` command (`--comparison`, `--output`)
 
 ### Session 7: Polish + Buffer
 

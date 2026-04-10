@@ -13,5 +13,3 @@ Rules:
 - For total_amount_due and consumption_amount, use numeric values only (no currency symbols or thousand separators).
 - Do not invent or hallucinate values. Only extract what is explicitly stated on the bill.
 - Return ONLY JSON. Do not include any other text. *** Important ***
-
-{ocr_text}
