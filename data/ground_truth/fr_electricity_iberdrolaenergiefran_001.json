@@ -1,0 +1,20 @@
+{
+  "document_id": "fr_electricity_iberdrolaenergiefran_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "IBERDROLA ENERGIE FRANCE",
+    "utility_type": "electricity",
+    "bill_number": "2322030161005917",
+    "bill_date": "2022-03-01",
+    "billing_period_start": "2022-01-23",
+    "billing_period_end": "2022-02-23",
+    "due_date": "2022-03-16",
+    "total_amount_due": 45.31,
+    "currency": "EUR",
+    "account_number": "735389950",
+    "consumption_amount": 215.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "fr_electricity_iberdrolaenergiefran_001.pdf"
+}

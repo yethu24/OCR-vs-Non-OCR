@@ -1,0 +1,20 @@
+{
+  "document_id": "us_water_clarkregionalwastewa_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Clark Regional Wastewater District",
+    "utility_type": "water",
+    "bill_number": null,
+    "bill_date": "2017-12-29",
+    "billing_period_start": "2017-12-01",
+    "billing_period_end": "2018-01-31",
+    "due_date": "2018-01-31",
+    "total_amount_due": 76.0,
+    "currency": "USD",
+    "account_number": "000000-000",
+    "consumption_amount": null,
+    "consumption_unit": null
+  },
+  "source_filename": "us_water_clarkregionalwastewa_001.pdf"
+}

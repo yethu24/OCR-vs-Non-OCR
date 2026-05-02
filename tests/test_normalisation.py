@@ -16,6 +16,7 @@ from src.normalisation import (
     normalise_date,
     normalise_extraction,
     normalise_float,
+    normalise_provider_name,
     normalise_string,
     normalise_utility_type,
 )
@@ -423,8 +424,11 @@ class TestFieldNormalisersMapping:
             assert FIELD_NORMALISERS[f] is normalise_float
 
     def test_string_fields_use_normalise_string(self):
-        for f in ("provider_name", "bill_number", "account_number"):
+        for f in ("bill_number", "account_number"):
             assert FIELD_NORMALISERS[f] is normalise_string
+
+    def test_provider_name_uses_normalise_provider_name(self):
+        assert FIELD_NORMALISERS["provider_name"] is normalise_provider_name
 
     def test_utility_type_uses_normalise_utility_type(self):
         assert FIELD_NORMALISERS["utility_type"] is normalise_utility_type

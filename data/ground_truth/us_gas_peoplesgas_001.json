@@ -1,0 +1,20 @@
+{
+  "document_id": "us_gas_peoplesgas_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Peoples Gas",
+    "utility_type": "gas",
+    "bill_number": "0123456789",
+    "bill_date": "2026-02-03",
+    "billing_period_start": "2026-01-05",
+    "billing_period_end": "2026-02-02",
+    "due_date": "2026-02-25",
+    "total_amount_due": 117.7,
+    "currency": "USD",
+    "account_number": "0123456789-0001",
+    "consumption_amount": 72.6,
+    "consumption_unit": "Therms"
+  },
+  "source_filename": "us_gas_peoplesgas_001.pdf"
+}

@@ -1,13 +1,13 @@
 pipeline:
-  mode: "ocr_text"                # "ocr_text" or "vision"
+  mode: "vision"                # "ocr_text" or "vision"
 
 ocr:
   engine: "tesseract"             # Extensible: "easyocr", "paddleocr"
 
 
 llm:
-  provider: "openai"              # "openai" or "anthropic"
-  model: "gpt-4o"                 # Provider-specific model name
+  provider: "anthropic"              # "openai" or "anthropic"
+  model: "claude-sonnet-4-5-20250929"                 # Provider-specific model name
   temperature: 0.0
   max_tokens: 2000
   structured_output: true

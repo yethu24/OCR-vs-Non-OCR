@@ -159,12 +159,12 @@ class TestCompareFieldStringShouldExactMatchWithLevenshtein:
     Levenshtein ratio for similarity."""
 
     def test_exact_match(self):
-        r = compare_field("provider_name", "ovo energy ltd", "ovo energy ltd")
+        r = compare_field("provider_name", "ovo energy", "ovo energy")
         assert r.match is True
         assert r.similarity == 1.0
 
     def test_mismatch_with_high_similarity(self):
-        r = compare_field("provider_name", "ovo energy", "ovo energy ltd")
+        r = compare_field("provider_name", "ovo energy", "ovo energ")
         assert r.match is False
         assert r.category == "incorrect"
         assert 0.5 < r.similarity < 1.0
@@ -216,7 +216,7 @@ class TestEvaluateDocumentShouldEvaluateAll12Fields:
 
     def test_perfect_document(self):
         fields = {
-            "provider_name": "OVO Energy Ltd",
+            "provider_name": "OVO Energy",
             "utility_type": "electricity",
             "bill_number": None,
             "bill_date": "2024-01-15",
@@ -263,7 +263,7 @@ class TestEvaluateDocumentShouldNormaliseBothSides:
 
     def test_whitespace_normalised(self):
         pred = {"provider_name": "  OVO Energy Ltd  "}
-        gt = {"provider_name": "ovo energy ltd"}
+        gt = {"provider_name": "ovo energy"}
         dr = evaluate_document("doc", pred, gt)
         fr = next(f for f in dr.fields if f.field_name == "provider_name")
         assert fr.match is True
@@ -524,7 +524,7 @@ class TestDiagnoseDocumentOCRModeShouldAttributeToLLMWhenValueInOCR:
         doc_dir.mkdir()
         (doc_dir / "ocr_text.txt").write_text("Invoice from OVO Energy Ltd dated 2024-01-15")
 
-        dr = _make_doc_result([("provider_name", "wrong", "ovo energy ltd")])
+        dr = _make_doc_result([("provider_name", "wrong", "ovo energy")])
         diags = diagnose_document("test_doc", dr, doc_dir, "ocr_text")
         assert len(diags) == 1
         assert diags[0].failure_type == "llm_extraction_failure"
@@ -539,7 +539,7 @@ class TestDiagnoseDocumentOCRModeShouldAttributeToOCRWhenValueNotInText:
         doc_dir.mkdir()
         (doc_dir / "ocr_text.txt").write_text("Garbled text with no useful info")
 
-        dr = _make_doc_result([("provider_name", "wrong", "ovo energy ltd")])
+        dr = _make_doc_result([("provider_name", "wrong", "ovo energy")])
         diags = diagnose_document("test_doc", dr, doc_dir, "ocr_text")
         assert len(diags) == 1
         assert diags[0].failure_type == "ocr_failure"

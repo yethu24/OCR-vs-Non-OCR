@@ -98,11 +98,20 @@ def generate_report(comparison_path: Path, output_dir: Path) -> Path:
     _save(ax.get_figure(), fig_dir / "timing_breakdown.png")
 
     # --- Chart 4: Cost bar ---
+    # Use documents_timed (from comparator) to label chart correctly.
+    doc_counts = sorted({int(x) for x in perf_df.get("documents_timed", []) if pd.notna(x)})
+    if not doc_counts:
+        doc_label = ""
+    elif len(doc_counts) == 1:
+        doc_label = f" ({doc_counts[0]} documents)"
+    else:
+        doc_label = f" ({doc_counts[0]}–{doc_counts[-1]} documents)"
+
     ax = perf_df["total_estimated_cost_usd"].plot(
         kind="bar", figsize=(8, 5), color=sns.color_palette("muted", 4), rot=15
     )
     ax.set_ylabel("Total Cost (USD)")
-    ax.set_title("API Cost Comparison (5 documents)")
+    ax.set_title(f"API Cost Comparison{doc_label}")
     for bar in ax.patches:
         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.001,
                 f"${bar.get_height():.4f}", ha="center", va="bottom", fontsize=9)

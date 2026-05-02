@@ -1,0 +1,20 @@
+{
+  "document_id": "us_gas_michigangasutilities_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Michigan Gas Utilities",
+    "utility_type": "gas",
+    "bill_number": null,
+    "bill_date": "2024-07-18",
+    "billing_period_start": "2024-06-19",
+    "billing_period_end": "2024-07-17",
+    "due_date": "2024-08-11",
+    "total_amount_due": 29.36,
+    "currency": "USD",
+    "account_number": "0123456789-00003",
+    "consumption_amount": 23.0,
+    "consumption_unit": "CCF"
+  },
+  "source_filename": "us_gas_michigangasutilities_001.pdf"
+}

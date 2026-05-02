@@ -1,0 +1,20 @@
+{
+  "document_id": "gb_electricity_eonenergysolutions_001",
+  "source_filename": "gb_electricity_eonenergysolutions_001.pdf",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "E.ON Energy Solutions",
+    "utility_type": "electricity",
+    "bill_number": "ABC123ABC",
+    "bill_date": "2014-02-18",
+    "billing_period_start": "2014-01-08",
+    "billing_period_end": "2014-02-18",
+    "due_date": null,
+    "total_amount_due": 48.59,
+    "currency": "GBP",
+    "account_number": "0123 4567 89",
+    "consumption_amount": 227,
+    "consumption_unit": "kWh"
+  }
+}

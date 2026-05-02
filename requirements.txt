@@ -10,6 +10,7 @@ python-Levenshtein
 psutil
 matplotlib
 seaborn
+pandas
 click
 pytest
 python-dotenv

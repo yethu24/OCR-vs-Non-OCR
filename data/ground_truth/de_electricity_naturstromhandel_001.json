@@ -1,0 +1,20 @@
+{
+  "document_id": "de_electricity_naturstromhandel_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "NaturStromHandel",
+    "utility_type": "electricity",
+    "bill_number": "DR-31415926",
+    "bill_date": "2018-05-16",
+    "billing_period_start": "2017-03-17",
+    "billing_period_end": "2018-03-15",
+    "due_date": null,
+    "total_amount_due": -40.14,
+    "currency": "EUR",
+    "account_number": "2000001-1",
+    "consumption_amount": 7774.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "de_electricity_naturstromhandel_001.pdf"
+}

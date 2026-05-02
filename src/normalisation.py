@@ -142,6 +142,77 @@ def normalise_string(value: Optional[str]) -> Optional[str]:
     return value if value else None
 
 
+def normalise_provider_name(value: Optional[str]) -> Optional[str]:
+    """Normalise provider_name and strip common legal-form suffixes.
+
+    This is applied identically to predictions and ground truth so that
+    formatting/legal-form variations (e.g. "OVO Energy Ltd") don't count as
+    semantic errors in evaluation.
+    """
+    s = normalise_string(value)
+    if s is None:
+        return None
+
+    # Strip punctuation to make suffix matching robust (keep spaces).
+    # Example: "s.c. a r.l." -> "s c a r l"
+    collapsed = re.sub(r"[^\w\s]", " ", s)
+    collapsed = re.sub(r"\s+", " ", collapsed).strip()
+
+    # Common legal-form suffixes across EN/DE/IT/FR contexts.
+    # We treat them as trailing tokens and remove iteratively.
+    suffixes = {
+        # English
+        "ltd",
+        "limited",
+        "inc",
+        "incorporated",
+        "llc",
+        "plc",
+        "co",
+        "company",
+        "corp",
+        "corporation",
+        # German
+        "gmbh",
+        "ag",
+        "kg",
+        "ug",
+        # Italian
+        "srl",
+        "spa",
+        "s p a",
+        "s r l",
+        "s n c",
+        "s a s",
+        # French / general
+        "sa",
+        "s a",
+        "sas",
+        "sarl",
+        "s a r l",
+        # Specific pattern seen in dataset
+        "s c a r l",
+    }
+
+    tokens = collapsed.split(" ")
+    # Remove suffix tokens from the end, supporting multi-token forms.
+    while tokens:
+        # Check 4,3,2,1 token suffixes (e.g. "s c a r l")
+        removed = False
+        for n in (4, 3, 2, 1):
+            if len(tokens) >= n:
+                tail = " ".join(tokens[-n:])
+                if tail in suffixes:
+                    tokens = tokens[:-n]
+                    removed = True
+                    break
+        if not removed:
+            break
+
+    core = " ".join(tokens).strip()
+    return core if core else None
+
+
 def normalise_utility_type(value: Optional[str]) -> Optional[str]:
     """Map synonyms to electricity | gas | water; otherwise same rules as strings."""
     if value is None:
@@ -244,7 +315,7 @@ def normalise_float(value: Optional[float | str | int]) -> Optional[float]:
 # Maps each schema field to its normaliser function.
 # Used by normalise_extraction() to apply the right transform per field.
 FIELD_NORMALISERS: dict[str, Callable[[Any], Any]] = {
-    "provider_name": normalise_string,
+    "provider_name": normalise_provider_name,
     "utility_type": normalise_utility_type,
     "bill_number": normalise_string,
     "bill_date": normalise_date,

@@ -1,0 +1,20 @@
+{
+  "document_id": "au_electricity_originenergy_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Origin Energy",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": "2015-10-16",
+    "billing_period_start": "2015-07-14",
+    "billing_period_end": "2015-10-14",
+    "due_date": "2015-11-05",
+    "total_amount_due": 325.09,
+    "currency": "AUD",
+    "account_number": "900 000 000 000",
+    "consumption_amount": 2584.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "au_electricity_originenergy_001.pdf"
+}

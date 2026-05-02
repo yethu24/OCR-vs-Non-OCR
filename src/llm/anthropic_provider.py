@@ -11,12 +11,16 @@ import logging
 import os
 import re
 import time
+import io
 
 from PIL import Image
 
 from .base import LLMProvider
 
 logger = logging.getLogger(__name__)
+
+# Anthropic hard limit (error seen at runtime): 5 MB per base64 image payload.
+_ANTHROPIC_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 
 # Strips ```json or ``` fences
 _FENCE_RE = re.compile(r"^```(?:json)?\s*\n?(.*?)\n?\s*```$", re.DOTALL)
@@ -31,6 +35,54 @@ def _strip_json_fencing(text: str) -> str:
     if m:
         return m.group(1).strip()
     return stripped
+
+
+def _encode_image_under_limit(img: Image.Image, max_bytes: int = _ANTHROPIC_IMAGE_MAX_BYTES) -> tuple[str, str]:
+    """Encode an image to base64 under Anthropic's per-image size limit.
+
+    Strategy:
+    - Try PNG first (lossless; best for text) but it can exceed 5MB on large pages.
+    - Fall back to JPEG with decreasing quality.
+    - If still too large, progressively downscale and retry JPEG.
+    """
+    # 1) PNG attempt
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    png_bytes = buf.getvalue()
+    if len(png_bytes) <= max_bytes:
+        return (LLMProvider.encode_image_base64(img, fmt="PNG"), "image/png")
+
+    # 2) JPEG attempts (quality sweep)
+    def _jpeg_bytes(im: Image.Image, quality: int) -> bytes:
+        b = io.BytesIO()
+        # Convert to RGB for JPEG
+        im_rgb = im.convert("RGB")
+        im_rgb.save(b, format="JPEG", quality=quality, optimize=True, progressive=True)
+        return b.getvalue()
+
+    for q in (85, 75, 65, 55, 45, 35):
+        jb = _jpeg_bytes(img, q)
+        if len(jb) <= max_bytes:
+            return (LLMProvider.encode_image_base64(img.convert("RGB"), fmt="JPEG"), "image/jpeg")
+
+    # 3) Downscale + JPEG (keep aspect ratio)
+    w, h = img.size
+    # Start from 1600px max dimension and go down.
+    for max_dim in (1600, 1400, 1200, 1000, 800):
+        scale = max_dim / max(w, h)
+        if scale >= 1.0:
+            continue
+        new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
+        resized = img.resize(new_size, resample=Image.LANCZOS)
+        for q in (75, 60, 45):
+            jb = _jpeg_bytes(resized, q)
+            if len(jb) <= max_bytes:
+                return (LLMProvider.encode_image_base64(resized.convert("RGB"), fmt="JPEG"), "image/jpeg")
+
+    raise ValueError(
+        f"Could not compress image under {max_bytes} bytes for Anthropic vision input "
+        f"(original size={img.size}, png_bytes={len(png_bytes)})."
+    )
 
 
 class AnthropicProvider(LLMProvider):
@@ -95,13 +147,13 @@ class AnthropicProvider(LLMProvider):
         # Build multi-part content: base64 image blocks + a text instruction
         content_blocks: list[dict] = []
         for img in images:
-            b64 = self.encode_image_base64(img)
+            b64, media_type = _encode_image_under_limit(img)
             content_blocks.append(
                 {
                     "type": "image",
                     "source": {
                         "type": "base64",
-                        "media_type": "image/png",
+                        "media_type": media_type,
                         "data": b64,
                     },
                 }

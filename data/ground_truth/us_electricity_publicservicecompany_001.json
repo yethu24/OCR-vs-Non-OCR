@@ -1,0 +1,20 @@
+{
+  "document_id": "us_electricity_publicservicecompany_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Public Service Company of Colorado",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": "2017-04-03",
+    "billing_period_start": "2016-12-12",
+    "billing_period_end": "2017-01-12",
+    "due_date": "2017-04-21",
+    "total_amount_due": 990.75,
+    "currency": "USD",
+    "account_number": null,
+    "consumption_amount": 500.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "us_electricity_publicservicecompany_001.pdf"
+}

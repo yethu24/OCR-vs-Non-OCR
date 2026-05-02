@@ -1,0 +1,20 @@
+{
+  "document_id": "us_electricity_centralhudson_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Central Hudson",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": null,
+    "billing_period_start": "2021-05-25",
+    "billing_period_end": "2021-06-22",
+    "due_date": "2021-07-19",
+    "total_amount_due": 218.1,
+    "currency": "USD",
+    "account_number": "0000-0000-00-0",
+    "consumption_amount": 458.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "us_electricity_centralhudson_001.pdf"
+}

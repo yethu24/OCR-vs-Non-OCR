@@ -1,87 +1,91 @@
-# SPEC — OCR-Based vs OCR-Free Template-Free Extraction (Utility Bills)
+# SPEC --- OCR-Based vs OCR-Free Template-Free Extraction from Utility Bills
 
-## 1. Experimental Design
+## 1. Problem Statement and Research Questions
 
-### Core Comparison (RQ1 + RQ2)
+### 1.1 Problem
+
+Automated extraction of structured data from semi-structured documents is a core challenge in document intelligence. Utility bills (electricity, gas, water) are representative of this challenge: they exhibit high variability in layout, language, formatting, and information density across providers and countries. Two paradigms exist for extraction using Large Language Models:
+
+- **OCR-based (text-mediated)**: PDF pages are rasterised, processed by an OCR engine to produce raw text, and that text is sent to an LLM in text mode for structured extraction.
+- **OCR-free (vision-mediated)**: The same rasterised page images are sent directly to a Vision-Language Model in vision mode, bypassing OCR entirely.
+
+The relative effectiveness of these paradigms is poorly understood, particularly in template-free, multilingual settings. Existing comparisons typically use different models or different prompts across pipelines, confounding input modality with model architecture and prompt design.
+
+### 1.2 Research Questions
+
+| # | Question |
+|---|----------|
+| **RQ1** | Does explicit OCR preprocessing improve or degrade extraction accuracy compared to direct visual extraction by the same LLM? |
+| **RQ2** | How do the two pipelines compare in cost, latency, and operational complexity? |
+| **RQ3** | Does the accuracy gap between OCR-based and OCR-free extraction vary across different LLM backends (model choice effect)? |
+
+### 1.3 Framing Note
+
+"OCR-free" in this project means VLM direct visual extraction using a general-purpose model's vision mode --- not a specialised document understanding model (e.g., Donut, Florence-2). The comparison is between **explicit OCR-mediated extraction** and **implicit visual extraction** using the same reasoning engine.
+
+---
+
+## 2. Experimental Design
+
+### 2.1 Core Comparison (RQ1 + RQ2)
 
 The LLM reasoning layer is held **constant** across both pipelines. The only variable is the input modality:
 
-- **OCR-based**: `PDF -> image -> Tesseract OCR (language from manifest) -> raw text -> LLM (text mode) -> structured JSON -> normalize -> canonical schema`
-- **OCR-free**: `PDF -> image -> LLM (vision mode) -> structured JSON -> normalize -> canonical schema`
+- **OCR-based**: `PDF -> image -> Tesseract OCR (language from manifest) -> raw text -> LLM (text mode) -> structured JSON -> normalise -> canonical schema`
+- **OCR-free**: `PDF -> image -> LLM (vision mode) -> structured JSON -> normalise -> canonical schema`
 
-This isolates the research question: **does explicit OCR preprocessing help or hurt extraction accuracy compared to direct visual extraction by the same model?**
+This isolates the research question: does explicit OCR preprocessing help or hurt extraction accuracy compared to direct visual extraction by the same model?
 
-### RQ3: Effect of Model Choice (2x2 Factorial)
+### 2.2 2x2 Factorial Design (RQ3)
 
-Run the paired comparison (text mode vs vision mode) with at least two different LLM backends:
+The paired comparison (text mode vs vision mode) is run with two different LLM backends:
 
-```
-             | Text Mode (OCR-based) | Vision Mode (OCR-free) |
--------------|-----------------------|------------------------|
-  Model A    |       Run 1           |       Run 2            |
-  Model B    |       Run 3           |       Run 4            |
-```
+|              | Text Mode (OCR-based) | Vision Mode (OCR-free) |
+|--------------|-----------------------|------------------------|
+| **Model A**  | Condition 1           | Condition 2            |
+| **Model B**  | Condition 3           | Condition 4            |
 
-Sub-questions:
+Sub-questions addressed:
 - Does one model consistently outperform the other regardless of mode?
 - Does the OCR-vs-vision accuracy gap widen or narrow depending on the model?
 - Cost-efficiency comparison across all four conditions.
 
-### Locked Baseline Decisions (to reduce churn)
+### 2.3 Baseline Decisions
 
-These baseline choices are fixed for the first full experimental runs (you can extend later, but keep these constant for the baseline matrix):
+| Parameter | Decision | Rationale |
+|-----------|----------|-----------|
+| Model A | OpenAI GPT-4o | State-of-the-art general-purpose model with vision and structured output support |
+| Model B | Anthropic Claude Sonnet | Leading alternative architecture from a different provider |
+| Vision input | First 2 pages per document | Most target fields appear in the first two pages; limits cost and latency |
+| Temperature | 0.0 | Maximises reproducibility |
+| Prompt | Zero-shot, single version (`extraction_v1.txt`) | Avoids prompt variation as a confound |
+| OCR engine | Tesseract v4+ (LSTM) | Open-source, local execution (no API cost confound), multilingual support |
 
-- **Model A (OpenAI)**: `gpt-4o`
-- **Model B (Anthropic)**: `claude-3-5-sonnet`
-- **Dev / cost-control models (optional)**:
-  - OpenAI: `gpt-4o-mini`
-  - Anthropic: Claude “Haiku” tier (if available in your account)
-- **Vision input (baseline)**: **first 2 pages only** per document (page 1–2)
-  - Rationale: on most bills, the majority of target fields appear within the first two pages; processing all pages increases cost/latency.
+### 2.4 Language Asymmetry
 
-### Framing Note
-
-"OCR-free" here means "VLM direct visual extraction" — not a specialised document understanding model like Donut. The comparison is between **explicit OCR-mediated extraction** vs **implicit visual extraction** using the same reasoning engine.
-
-### Language Asymmetry Note
-
-The OCR-based pipeline depends on knowing the document language (Tesseract needs a per-document language pack). The VLM vision mode handles multilingual input natively. This asymmetry is worth discussing in the write-up.
+The OCR-based pipeline depends on per-document language configuration (Tesseract requires a language pack). The VLM vision mode handles multilingual input natively. This asymmetry is a design consideration relevant to RQ2 (operational complexity).
 
 ---
 
-## 2. Resolved Open Questions
+## 3. System Architecture
 
-| # | Question | Decision |
-|---|----------|----------|
-| Q1 | Run mode | Single pipeline config per CLI invocation. Comparison is post-hoc via evaluation module. |
-| Q2 | Config vs CLI | YAML config as base; CLI flags override for quick iteration. |
-| Q3 | Data manifest | Explicit manifest CSV is the single source of truth. Replaces directory scanning. |
-| Q4 | LLM choice | Provider-agnostic interface. Start with any two providers. Trivial to add more. |
-| Q5 | OCR-free approach | Unified LLM backend. Same model, text mode vs vision mode. |
-| Q6 | Zero-shot vs fine-tuning | Eliminated. Both pipelines use the same prompted LLM. |
-| Q7 | Performance metrics | Wall-clock, per-stage timing, API latency, token usage, cost. Local CPU/RAM only for Tesseract. |
-| Q8 | Database | JSON/CSV flat files. Extensible to SQLite/remote DB later. |
-| Q9 | RQ3 | Effect of model choice: 2x2 factorial (model x pipeline mode). |
-
----
-
-## 3. Architecture
+### 3.1 Architecture Diagram
 
 ```mermaid
 flowchart TD
-    subgraph input [Input]
+    subgraph input [Input Layer]
         Manifest[Dataset Manifest CSV]
-        PDF[PDF Document]
+        PDF[PDF Documents]
     end
 
-    subgraph loader [Dataset Loader]
+    subgraph loader [Dataset Loading]
         Validate[Validate Manifest]
         Filter["Filter: active + annotated + verified"]
         Resolve[Resolve File Paths]
     end
 
-    subgraph shared [Shared Stages]
-        Convert[PDF to Image Conversion]
+    subgraph shared [Shared Preprocessing]
+        Convert[PDF-to-Image Conversion]
     end
 
     subgraph ocrBased [OCR-Based Pipeline]
@@ -99,15 +103,15 @@ flowchart TD
 
     subgraph postProcess [Post-Processing]
         Parse[JSON Parse + Validate]
-        Normalize[Normalize to Canonical Schema]
-        Persist["Write Per-Document\nOutput to Disk"]
+        Normalize[Normalise to Canonical Schema]
+        Persist["Per-Document Disk Persistence"]
     end
 
     subgraph evalBlock [Evaluation]
         Metrics["Accuracy Metrics\n(sliced by manifest metadata)"]
         Diagnosis[Failure Diagnosis]
         Perf[Performance Metrics]
-        Report[Comparative Report]
+        Report[Comparative Report + Charts]
     end
 
     Manifest --> Validate --> Filter --> Resolve
@@ -124,14 +128,18 @@ flowchart TD
     Perf --> Report
 ```
 
-### Design Principles
+### 3.2 Design Principles
 
-- **Strategy pattern** for swappable components: OCR engines, LLM providers
-- **Abstract base classes** define contracts; concrete implementations registered in a provider registry
-- **Manifest-driven**: dataset manifest CSV is the single source of truth for document metadata, filtering, and file resolution
-- **Prompt-as-config**: extraction prompts are versioned files selected via config, not hardcoded in provider classes
-- **Per-document persistence**: results written to disk immediately after processing, enabling crash recovery and run resumption
-- All config via YAML; no hardcoded model names, API keys, or paths
+| Principle | Implementation |
+|-----------|----------------|
+| **Strategy pattern** for swappable components | `LLMProvider` ABC + registry; `OCREngine` ABC |
+| **Abstract base classes** define contracts | Concrete implementations registered in provider registry |
+| **Manifest-driven processing** | Dataset manifest CSV is the single source of truth for document metadata, filtering, and file resolution |
+| **Prompt-as-config** | Extraction prompts are versioned files in `prompts/`, selected via config, not hardcoded |
+| **Per-document persistence** | Results written to disk immediately after processing, enabling crash recovery and run resumption |
+| **Schema-as-contract** | Single `BillExtraction` Pydantic model shared by prompt, LLM output, ground truth, normalisation, evaluation, and reporting |
+| **Config-driven execution** | All settings via YAML; no hardcoded model names, API keys, or paths |
+| **Disk-mediated decoupling** | Evaluation reads artefacts from disk, not in-memory objects; pipeline and evaluation are independently runnable |
 
 ---
 
@@ -140,177 +148,507 @@ flowchart TD
 ```
 project_root/
 ├── config/
-│   ├── default.yaml
-│   └── experiments/
+│   ├── default.yaml              # Default pipeline configuration
+│   └── experiments/              # Per-experiment YAML overrides
 ├── prompts/
-│   └── extraction_v1.txt
+│   └── extraction_v1.txt         # LLM prompt template with {schema_description}
 ├── src/
 │   ├── __init__.py
-│   ├── schema.py
-│   ├── pipeline.py
-│   ├── dataset_loader.py
+│   ├── schema.py                 # BillExtraction, PipelineResult, DocumentEntry
+│   ├── pipeline.py               # Batch orchestrator: run_pipeline(), _process_document()
+│   ├── dataset_loader.py         # DatasetLoader: validate, filter, resolve manifest
+│   ├── normalisation.py          # Shared normalisers for predictions and ground truth
+│   ├── performance.py            # Timer, estimate_cost(), get_system_snapshot()
+│   ├── reporting.py              # Chart generation and text summary
+│   ├── utils.py                  # Config loading, PDF conversion, file I/O
+│   ├── env.py                    # .env file loading (python-dotenv)
 │   ├── ocr/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── tesseract.py
+│   │   ├── base.py               # OCREngine ABC
+│   │   └── tesseract.py          # TesseractOCR adapter
 │   ├── llm/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   ├── openai_provider.py
-│   │   └── anthropic_provider.py
-│   ├── normalisation.py
-│   ├── evaluation/
-│   │   ├── __init__.py
-│   │   ├── metrics.py
-│   │   ├── diagnosis.py
-│   │   └── comparator.py
-│   ├── performance.py
-│   └── utils.py
+│   │   ├── __init__.py           # Public exports: LLMProvider, get_provider
+│   │   ├── base.py               # LLMProvider ABC
+│   │   ├── openai_provider.py    # OpenAI Responses API + Structured Outputs
+│   │   ├── anthropic_provider.py # Anthropic Messages API + fence stripping
+│   │   └── registry.py           # Provider registry with lazy import
+│   └── evaluation/
+│       ├── __init__.py           # Public exports
+│       ├── metrics.py            # compare_field, evaluate_document, evaluate_run
+│       ├── diagnosis.py          # Failure attribution: OCR vs LLM vs vision
+│       └── comparator.py         # Cross-run comparison: accuracy/perf matrices
 ├── data/
-│   ├── dataset_manifest.csv
-│   ├── bills/
-│   └── ground_truth/
+│   ├── dataset_manifest.csv      # Document registry (single source of truth)
+│   ├── bills/                    # PDF files ({document_id}.pdf)
+│   └── ground_truth/             # Annotation files ({document_id}.json)
 ├── results/
-│   ├── runs/
-│   └── reports/
-├── cli.py
-├── requirements.txt
-├── SPEC.md
-├── README.md
+│   ├── runs/                     # Per-run output directories
+│   └── reports/                  # Comparative analysis outputs
+├── scripts/
+│   ├── test_llm_e2e.py           # Manual E2E smoke test (4 conditions)
+│   └── verify_session2.py        # Offline + optional online verification
+├── cli.py                        # Click-based CLI entry point
+├── requirements.txt              # Python dependencies with version constraints
+├── SPEC.md                       # This file
+├── README.md                     # Setup and usage guide
 └── tests/
-    ├── test_schema.py
-    ├── test_normalisation.py
-    ├── test_dataset_loader.py
-    ├── test_evaluation.py
-    └── test_pipeline.py
+    ├── test_schema.py            # Schema model tests (35 tests)
+    ├── test_normalisation.py     # Normalisation tests (82 tests)
+    ├── test_dataset_loader.py    # Manifest validation tests (38 tests)
+    ├── test_evaluation.py        # Metrics + diagnosis + comparator tests (82 tests)
+    ├── test_pipeline.py          # Pipeline orchestration tests
+    ├── test_llm.py               # LLM provider + registry tests
+    ├── test_cli.py               # CLI command tests
+    ├── test_ocr.py               # OCR engine tests
+    ├── test_utils.py             # Utility function tests
+    ├── test_reporting.py         # Report generation tests
+    ├── test_performance.py       # Timer and cost estimation tests
+    └── test_env.py               # Environment loading tests
 ```
 
 ---
 
-## 5. Canonical Output Schema (12 fields)
+## 5. Canonical Output Schema
+
+### 5.1 BillExtraction (12 Fields)
+
+All fields are `Optional` (nullable). Bills may legitimately omit fields. The LLM is instructed to return `null` for absent fields.
 
 | Field | Type | Notes |
-|---|---|---|
-| `provider_name` | string \| null | Utility company name |
-| `utility_type` | string \| null | `electricity` / `gas` / `water` |
-| `bill_number` | string \| null | Invoice/bill reference number |
-| `bill_date` | date \| null | YYYY-MM-DD |
-| `billing_period_start` | date \| null | YYYY-MM-DD |
-| `billing_period_end` | date \| null | YYYY-MM-DD |
-| `due_date` | date \| null | YYYY-MM-DD |
-| `total_amount_due` | float \| null | Total amount to pay |
-| `currency` | string \| null | ISO 4217 (GBP, EUR, etc.) |
-| `account_number` | string \| null | Customer account reference |
-| `consumption_amount` | float \| null | Usage quantity |
-| `consumption_unit` | string \| null | kWh, m3, litres, SMC, etc. |
+|-------|------|-------|
+| `provider_name` | `string \| null` | Utility company name; legal suffixes stripped in normalisation |
+| `utility_type` | `string \| null` | `electricity` / `gas` / `water` |
+| `bill_number` | `string \| null` | Invoice/bill reference number |
+| `bill_date` | `date \| null` | `YYYY-MM-DD` |
+| `billing_period_start` | `date \| null` | `YYYY-MM-DD` |
+| `billing_period_end` | `date \| null` | `YYYY-MM-DD` |
+| `due_date` | `date \| null` | `YYYY-MM-DD` |
+| `total_amount_due` | `float \| null` | Total amount to pay |
+| `currency` | `string \| null` | ISO 4217 (GBP, EUR, etc.) |
+| `account_number` | `string \| null` | Customer account reference |
+| `consumption_amount` | `float \| null` | Usage quantity |
+| `consumption_unit` | `string \| null` | kWh, m3, litres, SMC, etc. |
+
+### 5.2 Schema Implementation
+
+`BillExtraction` is implemented as a Pydantic `BaseModel` in `src/schema.py`. Key features:
+
+- `SCHEMA_FIELDS` class variable: canonical ordered list of field names, used by evaluation, normalisation, and reporting to iterate fields consistently.
+- `schema_description()` classmethod: generates a human-readable field description injected into the LLM prompt via the `{schema_description}` template placeholder.
+- `model_config` with `json_schema_extra`: title set to `"Utility Bill Extraction"` for OpenAI Structured Outputs compatibility.
+- Pydantic `date` type for date fields: handles ISO 8601 serialisation automatically.
+
+### 5.3 PipelineResult
+
+Container returned by the pipeline for each processed document:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `document_id` | `str` | Document identifier from manifest |
+| `extraction` | `BillExtraction` | The 12-field extraction result |
+| `raw_llm_output` | `str` | Verbatim LLM response (for debugging and diagnosis) |
+| `ocr_text` | `str \| None` | Tesseract output (None in vision mode) |
+| `timings` | `dict` | Per-stage timing breakdown (ms) |
+| `token_usage` | `dict` | Input and output token counts from API response |
+| `model_id` | `str` | e.g., `"openai/gpt-4o"` |
+| `pipeline_mode` | `str` | `"ocr_text"` or `"vision"` |
+
+### 5.4 DocumentEntry
+
+Resolved row from `dataset_manifest.csv` (Python `dataclass`):
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `document_id` | `str` | Unique key and filename stem |
+| `language` | `str` | ISO 639-1; drives OCR language pack and evaluation slicing |
+| `utility_type` | `str` | `electricity` / `gas` / `water` |
+| `provider` | `str` | Billing company name |
+| `digital_native` | `bool` | Born-digital vs scanned |
+| `page_count` | `int` | Number of pages |
+| `pdf_path` | `Path` | Resolved path to PDF file |
+| `ground_truth_path` | `Path` | Resolved path to ground truth JSON |
 
 ---
 
 ## 6. Dataset Manifest
 
+### 6.1 Manifest Structure
+
 Single source of truth: `data/dataset_manifest.csv`.
 
 | Column | Type | Purpose |
-|---|---|---|
-| `document_id` | string | Unique key and filename stem |
-| `language` | string | ISO 639-1 (`en`,`de`,`fr`,`it`). Drives OCR language + evaluation slicing |
+|--------|------|---------|
+| `document_id` | string | Unique key; doubles as filename stem for PDF and ground truth |
+| `language` | string | ISO 639-1 (`en`, `de`, `fr`, `it`); drives OCR language pack and evaluation slicing |
 | `utility_type` | string | `electricity` / `gas` / `water` |
 | `provider` | string | Billing company name |
 | `digital_native` | boolean | Born-digital vs scanned |
 | `page_count` | integer | Number of pages |
-| `annotated` | boolean | Ground truth JSON created |
-| `verified` | boolean | Ground truth manually verified |
+| `annotated` | boolean | Ground truth JSON has been created |
+| `verified` | boolean | Ground truth has been manually verified |
 | `status` | string | `active` / `excluded` |
 
-Runnable set: `status=active AND annotated=true AND verified=true`.
+### 6.2 Runnable Set
 
-File resolution: `data/bills/{document_id}.pdf` and `data/ground_truth/{document_id}.json`.
+A document is eligible for experimental runs if and only if:
+
+```
+status = active AND annotated = true AND verified = true
+```
+
+This three-flag gating, enforced by `DatasetLoader.load_and_validate()`, ensures that only quality-controlled documents enter experimental runs.
+
+### 6.3 File Resolution
+
+- PDF: `data/bills/{document_id}.pdf`
+- Ground truth: `data/ground_truth/{document_id}.json`
+
+The `DatasetLoader` verifies file existence for all runnable documents at load time, failing early with descriptive error messages listing all missing files.
+
+### 6.4 Validation Pipeline
+
+`DatasetLoader.load_and_validate()` performs six sequential validation steps:
+
+1. **File existence**: Manifest CSV must exist
+2. **CSV parsing**: Must contain at least one data row
+3. **Column validation**: All 9 required columns present
+4. **Duplicate ID detection**: Reports exact row numbers of duplicates
+5. **Value validation**: Language, utility_type, status against allowed sets; page_count must be integer. Errors are aggregated and reported together
+6. **File existence verification**: Both PDF and ground truth files must exist for all runnable documents
 
 ---
 
-## 7. Per-Document Output Structure
+## 7. Ground Truth Format
 
-### Run ID format
-`{timestamp}_{provider}_{model}_{mode}` (e.g., `20260401_120000_openai_gpt4o_vision`)
+```json
+{
+  "document_id": "gb_electricity_ovo_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-03-30",
+  "fields": {
+    "provider_name": "OVO Energy",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": "2026-03-10",
+    "billing_period_start": "2025-12-18",
+    "billing_period_end": "2026-01-17",
+    "due_date": null,
+    "total_amount_due": 177.53,
+    "currency": "GBP",
+    "account_number": "26447122",
+    "consumption_amount": 572.502,
+    "consumption_unit": "kWh"
+  }
+}
+```
 
-### Directory layout
+Design rules:
+- Fields not present on the bill are set to `null` explicitly (distinguishing "absent" from "unannotated").
+- Provider names use canonical form without legal-form suffixes.
+- Dates use ISO 8601 (`YYYY-MM-DD`).
+- Currency uses ISO 4217 codes.
+- Consumption units use canonical abbreviations (kWh, m3, SMC, L, etc.).
+
+---
+
+## 8. Module Interfaces
+
+### 8.1 LLM Provider Interface
+
+```python
+class LLMProvider(ABC):
+    def __init__(self, model, temperature=0.0, max_tokens=2000,
+                 timeout=120.0, max_retries=2, **kwargs): ...
+
+    @abstractmethod
+    def extract_from_text(self, ocr_text: str, prompt: str) -> dict: ...
+
+    @abstractmethod
+    def extract_from_image(self, images: list[Image.Image], prompt: str) -> dict: ...
+
+    @abstractmethod
+    def get_model_id(self) -> str: ...
+
+    @staticmethod
+    def encode_image_base64(image: Image.Image, fmt: str = "PNG") -> str: ...
+```
+
+Both extraction methods return:
+```python
+{"raw_output": str, "token_usage": {"input_tokens": int, "output_tokens": int}, "latency_ms": float}
+```
+
+The `prompt` argument is the rendered instruction prompt (schema description + formatting rules). It does **not** contain the raw data. OCR text and images are passed as separate arguments and sent in the user message. This separation avoids duplicating input tokens and keeps the system/instruction message clean.
+
+### 8.2 Provider-Specific API Choices
+
+**OpenAI (`OpenAIProvider`)**: Uses the Responses API (`client.responses.parse`) with Structured Outputs (`text_format=BillExtraction`). Instructions go in the top-level `instructions` parameter; data goes in the `input` list. Vision images use `type: "input_image"` with a configurable `detail` parameter (`"high"` by default). Output length controlled via `max_output_tokens`. Structured Outputs guarantee schema-valid JSON via constrained decoding.
+
+**Anthropic (`AnthropicProvider`)**: Uses the Messages API (`client.messages.create`) with prompt-instructed JSON output. Instructions go in the top-level `system` parameter; data goes in the `messages` list. Output length controlled via `max_tokens` (required by Anthropic API). Claude may wrap JSON in markdown code fences; `_strip_json_fencing()` removes these before downstream parsing.
+
+### 8.3 Provider Registry
+
+The `registry.py` module maps config strings to provider classes with lazy import:
+
+```python
+_PROVIDERS = {
+    "openai": "src.llm.openai_provider.OpenAIProvider",
+    "anthropic": "src.llm.anthropic_provider.AnthropicProvider",
+}
+```
+
+`get_provider(config)` reads `config["llm"]["provider"]`, lazily imports the class, and instantiates with `model`, `temperature`, `max_tokens`, `vision_detail`, `timeout`, `max_retries`. Adding a new provider requires only a new module and one registry entry.
+
+### 8.4 OCR Engine Interface
+
+```python
+class OCREngine(ABC):
+    @abstractmethod
+    def extract_text(self, image: Image.Image, language: str = "eng") -> str: ...
+```
+
+`TesseractOCR` implements this interface with a `LANGUAGE_MAP` mapping ISO 639-1 codes (`en`, `de`, `fr`, `it`) to Tesseract language codes (`eng`, `deu`, `fra`, `ita`). Tesseract errors are caught and return empty strings.
+
+### 8.5 DatasetLoader
+
+```python
+class DatasetLoader:
+    def __init__(self, manifest_path, bills_dir, ground_truth_dir): ...
+    def load_and_validate(self) -> list[DocumentEntry]: ...  # Filtered + verified
+    def load_all(self) -> list[DocumentEntry]: ...            # All rows, no file checks
+```
+
+`load_and_validate()` runs the full 6-step validation pipeline and returns only runnable documents. `load_all()` returns all documents (useful for manifest inspection) with column and duplicate validation but no file existence checks.
+
+---
+
+## 9. Normalisation
+
+### 9.1 Normalisation Rules
+
+Applied identically to predictions and ground truth before comparison, ensuring that formatting differences do not count as extraction errors.
+
+| Field Type | Normalisation |
+|------------|---------------|
+| **Dates** | Parse against 10 format patterns (`YYYY-MM-DD`, `DD/MM/YYYY`, `DD.MM.YYYY`, etc.) into ISO 8601. Unparseable strings passed through |
+| **Strings** | NFC Unicode normalisation, strip, lowercase, whitespace collapse |
+| **Provider names** | String normalisation + iterative legal suffix stripping (Ltd, GmbH, SRL, S.p.A., s.c. a r.l., etc.) supporting multi-token suffixes |
+| **Utility types** | Multilingual synonym mapping: `luce`/`strom`/`electricite` -> `electricity`; `acqua`/`wasser`/`eau` -> `water`; `gaz`/`erdgas`/`metano` -> `gas` |
+| **Currencies** | Symbol and name mapping to ISO 4217 (`€` -> `EUR`, `£` -> `GBP`); valid 3-letter codes accepted; unknown -> `None` with warning |
+| **Consumption units** | Synonym mapping: `kwh`/`kw/h`/`kilowatt hour` -> `kWh`; `m³`/`mc`/`cubic metre` -> `m3`; `smc`/`sm3` -> `SMC`; etc. |
+| **Floats** | EU/US decimal parsing (heuristic based on separator positions); `bool` -> `None`; rounded to 2 decimal places |
+
+### 9.2 Implementation
+
+`FIELD_NORMALISERS` is a dispatch table mapping each of the 12 schema fields to its normaliser function. `normalise_extraction(fields)` applies the appropriate normaliser to every field, returning a dict with exactly 12 keys.
+
+The float parser `_parse_numeric_string()` uses separator position heuristics:
+- Both dot and comma present: dot before comma -> EU (`1.234,56`), comma before dot -> US (`1,234.56`)
+- Comma only -> EU decimal separator (`1234,56`)
+- No grouping separators -> standard `float()` parsing
+
+---
+
+## 10. Pipeline Orchestration
+
+### 10.1 Run Execution Flow
+
+`run_pipeline(config, force=False)` executes these steps:
+
+1. **Resolve paths** from config (manifest, bills dir, ground truth dir, results dir, prompt file)
+2. **Load and validate dataset** via `DatasetLoader.load_and_validate()`
+3. **Instantiate LLM provider** via `get_provider(config)` (lazy SDK import)
+4. **Instantiate OCR engine** (`TesseractOCR` if `mode == "ocr_text"`, else `None`)
+5. **Create run directory** with unique ID: `{timestamp}_{provider}_{sanitised_model}_{mode}`
+6. **Snapshot inputs** for reproducibility: config YAML, manifest CSV, prompt template
+7. **Process each document** with resume logic and error isolation
+8. **Write run summary** (total, processed, skipped, failed counts)
+
+### 10.2 Per-Document Processing
+
+`_process_document()` executes four timed stages:
+
+| Stage | Description | Timing Key |
+|-------|-------------|------------|
+| 1 | PDF-to-image conversion (all pages) | `pdf_to_images_ms` |
+| 2 | Prompt rendering (`{schema_description}` placeholder) | (negligible) |
+| 3a | OCR: Tesseract on first 2 pages, concatenated text -> LLM text mode | `ocr_ms`, `llm_call_ms` |
+| 3b | Vision: first 2 page images -> LLM vision mode | `llm_call_ms` |
+| 4 | JSON parsing -> normalisation -> Pydantic validation | `parse_normalise_ms` |
+
+### 10.3 JSON Parsing Hardening
+
+`_parse_llm_json(raw)` handles common LLM output patterns:
+
+1. **Direct parse**: `json.loads(text)` on stripped input
+2. **Markdown fence strip**: Regex-matches ` ```json ... ``` ` blocks and parses the inner content
+3. **Brace extraction**: Finds the first `{` and its matching `}` via brace-depth counting, parses the extracted substring
+4. **Failure**: Raises `ValueError` with diagnostic excerpt (first 500 characters)
+
+### 10.4 Resume Logic
+
+If `extraction.json` already exists in a document's output directory, the document is skipped. The `--force` CLI flag overrides this, re-processing all documents.
+
+### 10.5 Error Isolation
+
+Each document is processed inside a `try/except`. On failure, an `error.json` (containing the error message and full traceback) is written to the document's output directory. The run continues with the remaining documents. The evaluation module skips documents with `error.json`.
+
+---
+
+## 11. Per-Run Output Structure
+
+### 11.1 Run ID Format
+
+`{timestamp}_{provider}_{sanitised_model}_{mode}`
+Example: `20260401_120000_openai_gpt4o_vision`
+
+### 11.2 Directory Layout
+
 ```
 results/runs/{run_id}/
-├── config.yaml
-├── manifest_snapshot.csv
-├── prompt.txt
-├── summary.json
+├── config.yaml                    # Frozen config (including CLI overrides)
+├── manifest_snapshot.csv          # Manifest at run time
+├── prompt.txt                     # Exact prompt template used
+├── summary.json                   # Run statistics (total, processed, skipped, failed)
+├── evaluation.json                # Written by evaluate command
 └── documents/
     └── {document_id}/
-        ├── extraction.json
-        ├── raw_llm_output.txt
-        ├── ocr_text.txt          (ocr_text mode only)
-        ├── timings.json
-        └── metadata.json
+        ├── extraction.json        # Normalised 12-field BillExtraction output
+        ├── raw_llm_output.txt     # Verbatim LLM response
+        ├── ocr_text.txt           # Tesseract output (OCR-text mode only)
+        ├── timings.json           # Per-stage timing breakdown
+        ├── metadata.json          # Document metadata + cost estimate
+        ├── error.json             # Error details (only if document failed)
+        └── diagnosis.json         # Failure attribution (only after diagnose)
 ```
 
-### Resume logic
-If `extraction.json` exists for a document, skip it. Disable with `--force`.
+---
+
+## 12. Evaluation Methodology
+
+### 12.1 Normalisation Before Comparison
+
+Both predictions and ground truth are normalised identically via `normalise_extraction()` before any field-level comparison. This ensures that correct-but-differently-formatted extractions are not penalised (e.g., `"€"` vs `"EUR"`, `"01/03/2024"` vs `"2024-03-01"`).
+
+### 12.2 Field-Level Comparison
+
+Each field is compared using type-appropriate logic:
+
+| Field Type | Comparison Strategy |
+|------------|-------------------|
+| **Float fields** (`total_amount_due`, `consumption_amount`) | Absolute tolerance +-0.01 (absorbs rounding differences after 2dp normalisation) |
+| **Date fields** (`bill_date`, `billing_period_start`, `billing_period_end`, `due_date`) | Exact string match on normalised ISO 8601 strings |
+| **String fields** (all others) | Exact match for `match` flag; Levenshtein similarity ratio (0.0--1.0) for partial credit |
+
+### 12.3 Null Handling (4-Class Taxonomy)
+
+| Ground Truth | Prediction | Classification | Metric Impact |
+|--------------|------------|----------------|---------------|
+| value | value | Normal compare | In denominator |
+| null | value | **Hallucination** | Incorrect; in denominator |
+| value | null | **Omission** | Incorrect; in denominator |
+| null | null | **Both null** | Excluded from denominator |
+
+`both_null` represents fields legitimately absent from both the bill and the extraction. They are counted as matching (`match=True`, `similarity=1.0`) but excluded from accuracy denominators to prevent inflation.
+
+### 12.4 Accuracy Metrics
+
+| Metric | Definition |
+|--------|------------|
+| **Field-level accuracy** | Per field: `correct / (correct + incorrect + hallucination + omission)` across all documents |
+| **Document-level accuracy** | Fraction of documents with zero incorrect, zero hallucination, and zero omission fields |
+| **Overall accuracy** | All fields across all documents: total correct / total evaluated |
+| **Slice accuracy** | Accuracy computed for document subsets grouped by language or utility type |
+
+### 12.5 Failure Diagnosis
+
+For each incorrect field:
+
+**OCR-text mode**:
+- Search stored `ocr_text.txt` for the ground truth value (case-insensitive substring match)
+- Value found -> **LLM extraction failure** (Tesseract captured the value but the LLM missed it)
+- Value not found -> **OCR failure** (Tesseract failed to capture the value)
+
+**Vision mode**:
+- All incorrect fields -> **vision model failure** (no intermediate artefact for finer attribution)
+
+### 12.6 Provider-Name Canonicalisation
+
+Bills often include legal suffixes (e.g., `"Acque Veronesi s.c. a r.l."`). Both ground truth and predictions are normalised by stripping common legal-form suffixes (Ltd, GmbH, SRL, S.p.A., s.c. a r.l., etc.) so that legal-form formatting does not count as a semantic extraction error.
 
 ---
 
-## 8. Key Module Interfaces
+## 13. Cross-Run Comparison
 
-### 8.1 BillExtraction (Pydantic model)
-All 12 fields optional (nullable). Includes `schema_description()` classmethod for prompt rendering.
+`compare_runs()` loads or computes evaluation data for multiple runs and builds:
 
-### 8.2 PipelineResult (Pydantic model)
-`document_id`, `extraction`, `raw_llm_output`, `ocr_text`, `timings`, `token_usage`, `model_id`, `pipeline_mode`.
+| Output | Content |
+|--------|---------|
+| **Accuracy matrix** | Per-run overall accuracy, document-level accuracy, and 12 per-field accuracies |
+| **Performance matrix** | Per-run mean total time, mean LLM call time, mean OCR time, total estimated cost |
+| **Null analysis** | Per-run hallucination, omission, and both_null counts |
+| **Slice comparisons** | Accuracy by language and utility type for each run |
 
-### 8.3 DocumentEntry (dataclass)
-`document_id`, `language`, `utility_type`, `provider`, `digital_native`, `page_count`, `pdf_path`, `ground_truth_path`.
-
-### 8.4 DatasetLoader
-`load_and_validate()` — validates manifest, filters runnable docs, resolves + verifies file paths.
-`load_all()` — loads all docs regardless of flags (for inspection).
-
-### 8.5 OCREngine (ABC)
-`extract_text(image, language)` — per-document language via manifest.
-
-### 8.6 LLMProvider (ABC)
-`extract_from_text(ocr_text, prompt)` — text mode.
-`extract_from_image(images, prompt)` — vision mode.
-`get_model_id()` — identifier string.
-
-Constructor accepts `model`, `temperature`, `max_tokens`, `timeout` (HTTP timeout, default 120 s), and `max_retries` (SDK-level retries, default 2).
-
-The `prompt` argument is the rendered instruction prompt (schema description + formatting rules). It does **not** contain the raw data — OCR text and images are passed as separate arguments and sent in the user message. This separation avoids duplicating input tokens and keeps the system/developer/instruction message clean.
-
-#### Provider API choices
-
-- **OpenAI (`OpenAIProvider`):** Uses the **Responses API** (`client.responses.parse`) with **Structured Outputs** (`text_format=BillExtraction`).  Instructions go in the top-level `instructions` parameter; data goes in the `input` list.  Vision images use `type: "input_image"` with a configurable `detail` parameter (`"high"` by default).  Output length controlled via `max_output_tokens`.  Structured Outputs guarantee schema-valid JSON via constrained decoding.
-- **Anthropic (`AnthropicProvider`):** Uses the **Messages API** (`client.messages.create`) with prompt-instructed JSON output.  Instructions go in the top-level `system` parameter; data goes in the `messages` list.  Output length controlled via `max_tokens` (required by Anthropic API).  Claude may wrap JSON in markdown code fences; `_strip_json_fencing()` removes these before downstream parsing.
-
-The `raw_output` field is populated from the text content of the response for archival and failure diagnosis.  The pipeline's `_parse_llm_json()` provides additional fallback parsing (brace extraction, fence stripping) for robustness.
-
-Providers do not own prompt content — they receive the rendered prompt and format it into provider-specific API requests.
+Writes `comparison.json` to the reports directory.
 
 ---
 
-## 9. Prompt Management
+## 14. Reporting
 
-Prompts stored as versioned files in `prompts/`. Selected via `llm.prompt_file` in config. Template placeholder: `{schema_description}`. The prompt contains only extraction instructions and the schema description — raw data (OCR text or images) is provided separately in the user message to avoid duplicating input tokens. Exact prompt archived per run in `results/runs/{run_id}/prompt.txt`.
+`generate_report()` reads `comparison.json` and produces:
+
+### 14.1 Charts (6 PNG figures)
+
+| Chart | Description | Research Question |
+|-------|-------------|-------------------|
+| `overall_accuracy.png` | Bar chart: one bar per condition | RQ1 (modality comparison) |
+| `field_accuracy_heatmap.png` | Heatmap: 12 fields x 4 conditions | RQ1 (field-level analysis) |
+| `timing_breakdown.png` | Stacked bar: OCR time + LLM time | RQ2 (latency) |
+| `cost_comparison.png` | Bar chart: total cost per condition | RQ2 (cost) |
+| `accuracy_by_language.png` | Grouped bar: accuracy by language | RQ1/RQ3 (language effect) |
+| `accuracy_by_utility_type.png` | Grouped bar: accuracy by utility type | RQ1 (utility type effect) |
+
+### 14.2 Text Summary (`summary.txt`)
+
+- Results overview table (accuracy, document-level accuracy, LLM latency, cost per condition)
+- Best and worst conditions
+- Easiest and hardest fields
+- Null analysis (hallucination and omission counts per condition)
+- Accuracy by language table
+- Accuracy by utility type table
+- Full field-level accuracy table
 
 ---
 
-## 10. Config Schema
+## 15. Performance Measurement (RQ2)
+
+| Metric | OCR-based | Vision | Measurement |
+|--------|-----------|--------|-------------|
+| Total wall-clock time | Yes | Yes | `Timer` context manager (`time.perf_counter()`) |
+| PDF-to-image time | Yes | Yes | Timer on conversion step |
+| OCR time (Tesseract) | Yes | N/A | Timer on OCR step |
+| LLM API latency | Yes | Yes | Timer on API call |
+| Normalisation time | Yes | Yes | Timer on parse + normalisation step |
+| Token usage (in/out) | Yes | Yes | From API response metadata |
+| Estimated cost | Yes | Yes | Tokens x per-token pricing lookup |
+
+`estimate_cost()` uses a pricing table for known models (per 1M tokens). Unknown models return $0.00 with a warning.
+
+---
+
+## 16. Configuration
+
+### 16.1 Default Config (`config/default.yaml`)
 
 ```yaml
 pipeline:
   mode: "ocr_text"                # "ocr_text" or "vision"
+
 ocr:
-  engine: "tesseract"
-  preprocessing:
-    enabled: false
-    steps: []
+  engine: "tesseract"             # Extensible: "easyocr", "paddleocr"
+
 llm:
-  provider: "openai"
-  model: "gpt-4o"
+  provider: "openai"              # "openai" or "anthropic"
+  model: "gpt-4o"                 # Provider-specific model name
   temperature: 0.0
   max_tokens: 2000
   structured_output: true
@@ -318,222 +656,169 @@ llm:
   vision_detail: "high"           # OpenAI only: "low", "high", "auto"
   timeout: 120                    # HTTP timeout in seconds
   max_retries: 2                  # SDK-level automatic retries
+
 data:
   manifest: "data/dataset_manifest.csv"
   bills_dir: "data/bills"
   ground_truth_dir: "data/ground_truth"
+
 output:
   results_dir: "results/runs"
   save_intermediate: true
 ```
 
-CLI `--manifest` is an optional override (useful for subset experiments).
+### 16.2 CLI Overrides
 
----
-
-## 11. Ground Truth Format
-
-```json
-{
-  "document_id": "GB_electricity_ovo_001",
-  "annotated_by": "student",
-  "annotation_date": "2026-03-30",
-  "fields": {
-    "provider_name": "OVO Energy Ltd",
-    "utility_type": "electricity",
-    "bill_number": null,
-    ...
-  }
-}
-```
-
-Fields not present on the bill set to `null` explicitly.
-
----
-
-## 12. Evaluation Methodology
-
-### 12.1 Normalisation (applied identically to predictions and ground truth)
-- Dates -> ISO 8601 `YYYY-MM-DD`
-- Currency -> uppercase ISO 4217
-- Strings -> stripped, lowercased, whitespace-collapsed
-- Floats -> rounded to 2 decimal places
-
-### 12.2 Accuracy Metrics
-- Numeric/date: exact match (float tolerance +/-0.01)
-- Strings: exact match + normalised Levenshtein similarity
-- Field-level accuracy: per field across all docs
-- Document-level accuracy: all fields correct in a doc
-- Slicing by manifest metadata (language, utility type, provider, digital_native)
-
-### 12.3 Null Handling
-
-| Ground Truth | Prediction | Classification | Metric Impact |
-|---|---|---|---|
-| value | value | Normal | In denominator |
-| null | value | Hallucination | Incorrect |
-| value | null | Omission | Incorrect |
-| null | null | Legitimate null | Excluded from denominator |
-
-### 12.4 Failure Diagnosis
-**OCR-based**: search stored `ocr_text.txt` for expected value. Present -> LLM failure. Absent -> OCR failure.
-**Vision**: compare `raw_llm_output.txt` against expected. Correct pre-normalisation -> normalisation failure. Wrong -> model inference failure.
-
-### 12.5 Provider-Name Legal Suffix Issue
-Bills often include legal suffixes (e.g., `"Acque Veronesi s.c. a r.l."`) while ground truth may use a shorter canonical name. Primary evaluation uses exact match + Levenshtein on normalised strings. A secondary analysis may strip common legal-form suffixes (`ltd`, `srl`, `s.c. a r.l.`, `gmbh`, `s.a.`, etc.) to separate semantic errors from formatting differences.
-
----
-
-## 13. Performance Measurement (RQ2)
-
-| Metric | OCR-based | Vision | How Measured |
-|---|---|---|---|
-| Total wall-clock time | Yes | Yes | `time.perf_counter()` |
-| PDF-to-image time | Yes | Yes | Timer on conversion step |
-| OCR time (Tesseract) | Yes | N/A | Timer on OCR step |
-| API latency | Yes | Yes | Timer on API call |
-| Normalisation time | Yes | Yes | Timer on normalisation step |
-| Token usage (in/out) | Yes | Yes | From API response metadata |
-| Estimated cost | Yes | Yes | Tokens x per-token pricing |
-| Tesseract CPU/RAM | Yes | N/A | `psutil` sampling |
-
-For API-hosted models, server-side compute is not measurable; RQ2 focuses on wall-clock/latency/tokens/cost.
-
----
-
-## 14. CLI Interface
+CLI flags are deep-merged into the YAML config, allowing quick iteration without editing config files:
 
 ```bash
-python cli.py run --config config/experiments/gpt4o_text.yaml
+python cli.py run --config config/default.yaml --mode vision --provider anthropic --model claude-sonnet-4-5-20250929
+```
+
+Supported overrides: `--manifest`, `--mode`, `--provider`, `--model`, `--force`.
+
+---
+
+## 17. CLI Interface
+
+```bash
+# Run extraction pipeline
+python cli.py run --config config/default.yaml
 python cli.py run --config config/default.yaml --mode vision --provider openai --model gpt-4o
-python cli.py run --config config/default.yaml --manifest data/subset_en_only.csv
 python cli.py run --config config/default.yaml --force
-python cli.py evaluate --run-dir results/runs/20260401_120000_openai_gpt4o_text/
-python cli.py compare --runs results/runs/...text/ results/runs/...vision/
-python cli.py report --runs-dir results/runs/ --output results/reports/
+
+# Evaluate a completed run
+python cli.py evaluate --run-dir results/runs/{run_id}/
+python cli.py evaluate --run-dir results/runs/{run_id}/ --diagnose
+
+# Compare multiple runs (the 2x2 matrix)
+python cli.py compare --runs results/runs/...text/ --runs results/runs/...vision/
+
+# Generate charts and summary from comparison
+python cli.py report --comparison results/reports/comparison.json --output results/reports/
 ```
 
 ---
 
-## 15. Budget Recommendation
+## 18. Prompt System
 
-With 20-50 documents and 2x2 factorial:
-- Main experiments: ~$5-15
-- Dev/debugging: ~$5-10
-- Reruns: ~$5-10
-- **Total: $20-40**
+### 18.1 Template Design
 
-Suggested pairs: GPT-4o-mini + Gemini 1.5 Flash (~$5), GPT-4o + Gemini 1.5 Pro (~$15), GPT-4o + Claude 3.5 Sonnet (~$20).
+Prompts are stored as versioned files in `prompts/`. Selected via `llm.prompt_file` in config.
 
----
+The template contains:
+- Role instruction ("You are a utility bill data extraction assistant")
+- Schema description (injected via `{schema_description}` placeholder from `BillExtraction.schema_description()`)
+- Output format rules (JSON only, exactly 12 fields, null for missing, ISO dates, ISO 4217 currency, no hallucination)
+- Provider name rules (strip legal suffixes)
 
-## 16. Implementation Sessions
+### 18.2 Separation of Instructions and Data
 
-### Session 1: Foundation -- COMPLETE
+The prompt contains **only** extraction instructions and the schema description. Raw data (OCR text or images) is provided separately in the user message to avoid duplicating input tokens. This separation keeps the system/instruction message clean and is consistent across both providers.
 
-Delivered:
-- Project scaffolding: directory structure, `requirements.txt`, `config/default.yaml`
-- `src/schema.py`: `BillExtraction` (12-field Pydantic model with `schema_description()` classmethod, `SCHEMA_FIELDS` class variable), `PipelineResult`, `DocumentEntry` dataclass
-- `src/dataset_loader.py`: `DatasetLoader` with `load_and_validate()` (column validation, duplicate ID check, value validation for language/utility_type/status, `active+annotated+verified` filtering, path resolution, file existence verification) and `load_all()` (for inspection without filtering)
-- `src/utils.py`: `load_config()` with `deep_merge()` for CLI overrides, `pdf_to_images()` via pdf2image/Poppler, `load_prompt_template()`, `read_json()`, `write_json()`, `write_text()`, `copy_file()`, `setup_logging()`
-- `src/normalisation.py`: `normalise_date()` (`datetime` vs `date`, 10 `strptime` formats, unparseable strings passed through); `normalise_string()` (Unicode NFC, strip, lower, collapse whitespace); `normalise_utility_type()` / `normalise_consumption_unit()` (synonym maps to canonical `electricity`/`gas`/`water` and units e.g. `kWh`, `m3`, `SMC`; unknowns fall back to string rules); `normalise_currency()` (symbol and name map to ISO 4217, then any three-letter `A–Z` code, else `None` + log warning); `normalise_float()` (European vs US comma/dot parsing for strings, `round(..., 2)`); `normalise_extraction()` applies `FIELD_NORMALISERS` (`dict[str, Callable]`) per schema field
-- `src/ocr/base.py`: `OCREngine` ABC with `extract_text(image, language)` interface
-- `src/ocr/tesseract.py`: `TesseractOCR` with `LANGUAGE_MAP` (`en->eng`, `de->deu`, `fr->fra`, `it->ita`)
-- `prompts/extraction_v1.txt`: prompt template with `{schema_description}` placeholder (instructions only — OCR text and images are passed separately in the user message to avoid duplicating input tokens)
-- `src/llm/__init__.py`, `src/evaluation/__init__.py`: package stubs
-- Tests: `test_schema.py` (7 tests), `test_normalisation.py` (38 tests), `test_dataset_loader.py` (14 tests) -- **59 tests** for Session 1 modules, all passing
-- Sample dataset: 5 PDFs in `data/bills/` (2 EN, 3 IT), manifest populated, 5 verified ground truth JSONs in `data/ground_truth/`
-- Smoke-tested: PDF->images, OCR (EN+IT), prompt rendering, DatasetLoader runnable validation
+### 18.3 Prompt Archival
 
-### Session 2: LLM Integration + Prompt System -- COMPLETE
-
-Delivered:
-- `src/llm/base.py`: `LLMProvider` ABC with `extract_from_text`, `extract_from_image` (list of images for first-2-pages baseline), `get_model_id`, and `encode_image_base64` helper.  Constructor accepts `timeout` and `max_retries` for SDK-level reliability.
-- `src/llm/openai_provider.py`: `OpenAIProvider` using the **Responses API** (`client.responses.parse`) with **Structured Outputs** (`text_format=BillExtraction`).  System instructions via `instructions` parameter; vision images via `type: "input_image"` with configurable `detail` (default `"high"`); output length via `max_output_tokens`.  Token + latency tracking.
-- `src/llm/anthropic_provider.py`: `AnthropicProvider` using the **Messages API** (`client.messages.create`) with prompt-instructed JSON and `_strip_json_fencing()` post-processing.  System instructions via top-level `system` parameter; `max_tokens` (required by Anthropic API).  Token + latency tracking.
-- `src/llm/registry.py`: `get_provider(config)` factory with lazy imports; supports `llm.provider` = `openai` or `anthropic`.  Passes `vision_detail`, `timeout`, `max_retries` from config.
-- `src/llm/__init__.py`: package exports (`LLMProvider`, `get_provider`)
-- `scripts/test_llm_e2e.py`: dev e2e smoke test (1 bill × 4 conditions) with validation and spot-checks.  Defaults to cheaper dev models; override via `OPENAI_E2E_MODEL` / `ANTHROPIC_E2E_MODEL`.
-
-### Session 3: Pipeline Orchestrator + CLI ✅
-
-- `src/pipeline.py`: orchestrator with `run_pipeline()` batch function, `_process_document()` per-doc processing, `_parse_llm_json()` hardened JSON parsing (direct / fence-strip / brace-extraction / diagnostic failure), resume logic via `extraction.json` existence check, error isolation per document
-- `cli.py` with `run` command: `--config` required, optional `--manifest`/`--mode`/`--provider`/`--model` overrides, `--force` flag
-- `src/performance.py`: `Timer` context manager, `estimate_cost()` lookup for known models, `get_system_snapshot()` via psutil
-- Run config snapshot + manifest snapshot + prompt copy into run output directory
-- Per-document output: `extraction.json`, `raw_llm_output.txt`, `ocr_text.txt` (OCR mode), `timings.json`, `metadata.json`, `error.json` (on failure)
-
-### Session 4: Evaluation Module ✅
-
-Delivered:
-- `src/evaluation/metrics.py`: `FieldResult`, `DocumentResult`, `RunEvaluation` dataclasses; `compare_field()` with null table (both_null/hallucination/omission), float tolerance ±0.01, date exact-match, string exact-match + Levenshtein similarity; `evaluate_document()` normalises both sides via `normalise_extraction()`; `evaluate_run()` walks run directory, loads ground truth, aggregates field-level/document-level/overall accuracy, slices by language and utility_type, writes `evaluation.json`
-- `src/evaluation/diagnosis.py`: `FieldDiagnosis` dataclass; `diagnose_document()` attributes each incorrect field — OCR mode: GT in ocr_text → LLM extraction failure, else OCR failure; vision mode: raw matches GT pre-norm → normalisation failure, else model inference failure; writes `diagnosis.json` per document
-- `src/evaluation/comparator.py`: `compare_runs()` loads/evaluates multiple runs, builds accuracy matrix (per-field across runs), performance matrix (mean timings + cost), null analysis, slice comparison; writes `comparison.json`
-- `src/evaluation/__init__.py`: public exports (`FieldResult`, `DocumentResult`, `RunEvaluation`, `compare_field`, `evaluate_document`, `evaluate_run`, `FieldDiagnosis`, `diagnose_document`, `compare_runs`)
-- `cli.py`: `evaluate` command (`--run-dir`, `--gt-dir`, `--diagnose` flag); `compare` command (`--runs` multiple, `--gt-dir`, `--output`)
-- `tests/test_evaluation.py`: 30 tests covering compare_field null table, float tolerance, Levenshtein, evaluate_document normalisation, evaluate_run disk I/O + slicing, diagnose_document OCR/vision modes, compare_runs report generation — **111 total tests** in `tests/`, all passing
-
-### Session 5: Run Experiments
-
-- Run all 4 experimental conditions (2 models x 2 modes) on full dataset
-- Verify outputs, fix pipeline bugs
-
-
-### Session 6: Analysis + Visualisation ✅
-
-Delivered:
-- `src/reporting.py`: `generate_report(comparison_path, output_dir)` reads `comparison.json`, generates 6 charts (matplotlib/seaborn PNG) and a plain-text summary; `_short_label()` derives human-readable run labels (e.g. "GPT-4o OCR", "Sonnet 4.5 Vision") from run IDs
-- Charts: `overall_accuracy.png` (bar), `field_accuracy_heatmap.png` (12 fields × 4 runs), `timing_breakdown.png` (stacked OCR+LLM), `cost_comparison.png` (bar), `accuracy_by_language.png` (grouped bar), `accuracy_by_utility_type.png` (grouped bar)
-- `summary.txt`: results overview table, best/worst metrics, null analysis, accuracy by language, accuracy by utility type, full field-level accuracy table
-- `cli.py` with `report` command (`--comparison`, `--output`)
-
-### Session 7: Polish + Buffer
-
-- Edge case fixes
-- README finalisation
-- Code cleanup, remove debug artefacts
-- Buffer for overruns from earlier sessions
+The exact prompt used for each run is copied to `results/runs/{run_id}/prompt.txt` for reproducibility.
 
 ---
 
-## 17. Risks and Mitigations
+## 19. Testing
+
+### 19.1 Test Coverage
+
+The project includes 237+ automated tests across 12 test files:
+
+| Test File | Coverage | Tests |
+|-----------|----------|-------|
+| `test_schema.py` | BillExtraction defaults, serialisation, schema_description, PipelineResult, DocumentEntry | 35 |
+| `test_normalisation.py` | All normalisers, date formats, EU/US floats, currency maps, unit synonyms, provider suffixes | 82 |
+| `test_dataset_loader.py` | Manifest validation, filtering, path resolution, error aggregation, edge cases | 38 |
+| `test_evaluation.py` | compare_field null table, float tolerance, Levenshtein, evaluate_document, evaluate_run, diagnosis, comparator | 82 |
+| `test_pipeline.py` | JSON parsing (fences, brace extraction), run ID generation, mocked pipeline integration | varies |
+| `test_llm.py` | Provider ABC, registry, mocked SDK calls, fence stripping | varies |
+| Other test files | CLI commands, OCR engine, reporting, performance, utils, env loading | varies |
+
+### 19.2 Testing Strategy
+
+- **Unit tests**: Individual functions and methods tested in isolation (normalisers, field comparisons, JSON parsing)
+- **Integration tests**: End-to-end flows with filesystem fixtures (DatasetLoader with temp CSV/files, evaluate_run with mock run directories)
+- **Parametrised tests**: Extensive use of `@pytest.mark.parametrize` for date formats, currency mappings, unit synonyms, and normalisation edge cases
+- **E2E smoke test**: Manual `scripts/test_llm_e2e.py` exercising all 4 conditions against a real document (requires API keys; costs money)
+
+---
+
+## 20. Dependencies
+
+### 20.1 Python Packages
+
+```
+pydantic>=2.0          # Schema validation and structured output
+pyyaml                 # YAML config parsing
+pdf2image              # PDF-to-image conversion (requires Poppler)
+Pillow                 # Image handling
+pytesseract            # Tesseract OCR Python binding
+openai                 # OpenAI API client
+anthropic              # Anthropic API client
+python-Levenshtein     # String similarity metrics
+psutil                 # System resource monitoring (optional)
+matplotlib             # Chart generation
+seaborn                # Statistical chart styling
+pandas                 # Data manipulation for reporting
+click                  # CLI framework
+pytest                 # Test framework
+python-dotenv          # .env file loading
+```
+
+### 20.2 System Dependencies
+
+- **Poppler**: Required by `pdf2image` for PDF rasterisation
+- **Tesseract OCR**: Required by `pytesseract`; language packs: `eng`, `deu`, `fra`, `ita`
+
+---
+
+## 21. Risks and Mitigations
 
 | Risk | Impact | Mitigation |
-|---|---|---|
-| 2-week deadline is tight | May not complete all features | Core pipeline + evaluation first; visualisation is P2 |
-| Dataset < 20 bills | Weak statistical claims | Aim for 5+ per language (20 minimum). Report limitations. |
-| API account setup delays | Blocks Session 2 | Set up accounts during Session 1 |
-| OCR text too noisy for LLM | Skewed results toward vision | Store OCR text for diagnosis; this is a valid finding |
+|------|--------|------------|
+| Dataset < 20 bills | Weak statistical claims | Aim for 5+ per language; report limitations; frame as case study |
+| API account setup delays | Blocks experiments | Set up accounts early; dev models available for testing |
+| OCR text too noisy for LLM | Skewed results toward vision | Store OCR text for diagnosis; noisy OCR is a valid finding |
 | Prompt sensitivity | Results vary with wording | Identical prompt for both modes; archived per run |
-| API rate limits / outages | Delays experiments | Retry with backoff; resume mode skips completed docs |
-| "Both use same model" criticism | Reviewer questions validity | Comparing input modalities, not models. Controlled variable is a strength. |
-| Ground truth annotation errors | Corrupt evaluation | Self-validate via model disagreements. Manifest tracks `verified` flag. |
+| API rate limits / outages | Delays experiments | SDK-level retries (configurable); resume mode skips completed docs |
+| "Both use same model" criticism | Reviewer questions validity | Comparing input modalities, not models; controlled variable is a strength |
+| Ground truth annotation errors | Corrupted evaluation | Self-validate via model disagreements; manifest tracks `verified` flag |
 | Manifest out of sync with disk | Pipeline fails or silently skips | DatasetLoader validates file existence at load time |
 | Multi-language Tesseract variance | Confounding variable | Per-language analysis via manifest slicing |
-| Provider-name legal suffixes | Inflated string mismatch rate | Report primary + secondary "canonicalised" metric |
+| Provider-name legal suffixes | Inflated string mismatch rate | Normalisation strips legal suffixes; canonicalised provider names |
+| Structured output asymmetry | Confounds format reliability with extraction accuracy | Raw LLM output archived for post-hoc analysis |
 
 ---
 
-## 18. Dependencies
+## 22. Out of Scope
 
-Python (via `requirements.txt`):
-```
-pydantic>=2.0, pyyaml, pdf2image, Pillow, pytesseract, openai, google-generativeai,
-anthropic, python-Levenshtein, psutil, matplotlib, seaborn, click, pytest
-```
+The following are explicitly excluded from the current implementation:
 
-System:
-- Poppler (for pdf2image)
-- Tesseract OCR + language packs: eng, deu, fra, ita
-
----
-
-## 19. Out of Scope (Deferred)
-
-- Image preprocessing pipeline (grayscale, binarise, deskew)
+- Image preprocessing pipeline (grayscale, binarisation, deskew)
 - Fine-tuning of any model
-- REST API / web frontend
+- Few-shot prompting (examples in prompt)
+- REST API or web frontend
 - Docker containerisation
-- Specialised OCR-free models (Donut, Florence-2)
+- Specialised OCR-free models (Donut, Florence-2, Pix2Struct)
 - Remote database integration
 - Annotation tooling
+- Asynchronous or parallel document processing
+- Confidence scoring or calibration
+- Inter-annotator agreement measurement
+
+---
+
+## 23. Budget Estimate
+
+With 20--50 documents and 2x2 factorial:
+
+| Component | Estimated Cost |
+|-----------|---------------|
+| Main experiments (4 conditions) | $5--15 |
+| Development and debugging | $5--10 |
+| Re-runs and iteration | $5--10 |
+| **Total** | **$20--40** |

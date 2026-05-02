@@ -1,0 +1,20 @@
+{
+  "document_id": "gb_water_affinitywater_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Affinity Water",
+    "utility_type": "water",
+    "bill_number": null,
+    "bill_date": "2020-03-04",
+    "billing_period_start": "2019-08-16",
+    "billing_period_end": "2020-02-10",
+    "due_date": "2020-03-14",
+    "total_amount_due": 46.0,
+    "currency": "GBP",
+    "account_number": "330968",
+    "consumption_amount": 96000.0,
+    "consumption_unit": "litres"
+  },
+  "source_filename": "gb_water_affinitywater_001.pdf"
+}

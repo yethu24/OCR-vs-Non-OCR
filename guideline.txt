@@ -1,0 +1,495 @@
+KCL BSc COMPUTER SCIENCE — FINAL YEAR PROJECT
+MASTER GUIDELINES, RULES & CONSTRAINTS
+Target: 90%+ (A++ Outstanding)
+Synthesised from:
+
+BSc Individual Project Assessment Guidelines (KCL, 24/08/2020)
+KCL College Marking Framework — Level 6 UG Generic Criteria
+KCL 6CCS3PRJ Department Assessment Criteria — section weightings and sub-criteria
+Full text analysis of five KCL sample dissertations (Reports 01–05)
+Pasted project guidelines (conversation documents 1 and 3)
+
+
+
+PART 0 — FOUNDATIONAL RULES BEFORE ANYTHING ELSE
+0.1 What the Report Must Demonstrate
+The guidelines state four explicit things the report must show. Every section you write must be measurable against all four:
+1. You understand the wider context of computing by relating your project and approach to existing products or research. This is why the literature review exists, why your design must cite prior work, and why your evaluation must compare against existing techniques.
+2. You can apply theoretical and practical degree-level techniques to produce a significant piece of written work and a substantial piece of software. Significant and substantial are the operative words — modest scope cannot achieve A++.
+3. You are capable of objectively criticising your own work, discussing its implications, and making constructive suggestions for improvements. Objective self-criticism is explicitly required. Claiming success without identifying limitations is a direct failure against this criterion.
+4. As a computing professional, you can explain your thinking clearly and concisely to third parties who may not be experts. Your report must be readable by an informed non-specialist. Assume your reader is a computer scientist, not a specialist in your exact subfield.
+0.2 The Fundamental Priority Hierarchy
+The guidelines state this explicitly and students consistently get it wrong:
+
+"You should consider that the aim of the project is to produce a good report and that software, hardware, theory, etc. that you developed during the project are merely a means to this end."
+
+The report is the product. The software/system/experiment is evidence within the report. A perfect system with a poor report scores poorly. A modest system with an excellent report scores well. Internalise this now.
+0.3 Who Reads Your Report
+
+Your supervisor and a second marker assess the full report
+External examiners only have the report — no demonstration, no code, no conversation. For degree classification boundaries and prize nominations, the report is the sole artefact
+Most project assessors will not have followed the project throughout — they rely on the report alone
+
+Every section must be comprehensible to a marker who has never spoken to you and is reading your report cold.
+0.4 The Word Limit — Hard Constraint
+
+Main body: must not exceed 25,000 words
+Exceeding this = zero mark on the entire project
+Appendices are excluded from the word count
+Expected length: considerably less than 25,000 words
+Conciseness and clarity are explicitly rewarded; padding is explicitly penalised
+
+0.5 Assessment Weighting
+ComponentWeightFinal Report90%Oral Presentation10%
+The external examiner only sees the report. The report is everything.
+
+
+PART 1 — ASSESSMENT STRUCTURE
+1.1 Report Section Weightings and Sub-Criteria
+These are the exact criteria from the department assessment guidelines. Every bullet is what your marker scores you against.
+Introduction — 10%
+
+Provides a context for the work
+Clearly defines the problem to be addressed
+Motivates the importance of the work
+Establishes the relevance of the work in the project topic
+
+Literature Review — 10%
+
+The discussion is structured and coherent
+Key technical issues are summarised
+Published work has been related to the project work
+Literature sources have been critically analysed
+The literature has been comprehensively covered
+
+Objectives, Specification and Design — 15%
+For artefact-producing projects:
+
+Requirements/objectives have been described adequately
+A rationale for the design approach is given
+Alternative designs have been considered
+
+For theoretical projects:
+
+The project identifies a coherent set of issues to be addressed
+A rationale for selected issues is given
+Selected issues derive from a synthesis of the relevant literature
+
+Methodology and Implementation — 25% ← Highest weighted section
+
+The implemented product is sophisticated
+Implementation choices have been justified
+Adequate and effective testing has been performed
+Methodology is sound and has been clearly presented
+
+Results, Analysis and Evaluation — 20%
+
+Results have been analysed and discussed
+Analysis and evaluation procedures have been explained
+Material has been compared and contrasted
+Comparison of achievements with requirements
+Awareness of potential extensions
+Reflective and justified conclusions have been drawn
+
+General Scholarship — 10%
+
+Writing: clear, coherent, repetition-free
+Ability to express well-formed arguments
+Well structured report
+Free of grammatical and typographical errors
+A full set of references is included
+
+Legal, Social, Ethical, Sustainability and Professional Issues — 10%
+
+Indicates relevant professional standards
+Outlines the social and ethical implications
+Thoughtful discussion of the impact of the project in its relevant context: public well-being, environment, sustainability, economic, and commercial factors
+
+1.2 Grade Boundaries
+GradeMarkA++ Outstanding — TARGET90–100%A+ Excellent High First80–89%A Very Good First70–79%Below target<70%
+
+
+PART 2 — THE A++ GRADE DESCRIPTOR
+This is what your markers read when deciding whether your work reaches 90%+. Every word is significant. This is the only grade descriptor you need to memorise.
+A++ (90–100%) — Outstanding
+SectionExact Rubric DescriptorIntroductionDefines the project area and its place within the subject, economic, customer and/or commercial context. Proceeds from the wider concerns of Informatics to the specific subject of the report by way of an orderly and natural progression of ideas.Literature ReviewReviews the background to the project comprehensively. Incorporates relevant issues succinctly. Omits the irrelevant. Identifies all the main issues, which are then analysed and developed. The Review is a penetrating analysis, showing an impressive grasp of the subject and excellent judgement in the selection of previous work that should be applied in project. It gives new insights into the project area, not immediately identifiable from literature.Specification & DesignFrom the Review explains the rationale behind the design for the artefact, comparing alternatives and justifying any choices made. Describes the requirements for the artefact succinctly, but in enough detail for reader to appreciate all significant points. There is something distinctly ambitious about what is being attempted and the student has carried off the attempt with style, rarely defeated by problems encountered and more typically finding some clever solution.ImplementationDisplays a systematic and carefully planned approach, with a clear understanding of the material and the methodology. There is something distinctly ambitious about what has been attempted and the student has carried off the attempt with style, rarely defeated by problems encountered and more typically finding some clever solution. Shows a clever application of testing and/or verification techniques as well as a deep knowledge and understanding of software maintenance.EvaluationEvaluates the artefact, comparing results expected from theory (including those for alternative designs) with those obtained in practice.LSESPClearly indicates those professional standards, codes of conduct and legislation of relevance to the project conducted and succinctly describes their implications. It includes a thoughtful discussion of all relevant aspects such as: effects on the public well-being, computer security, environmental and sustainability aspects, economic and commercial factors, globalization, accessibility, Intellectual Property and related issues, software trustworthiness.ConclusionStates clear conclusions from the work done, making accurate predictions of results that would be obtained by applying the present work in new areas, future lines of work or extensions.Report QualityClear, coherent, logical structure to the report. Grammatical, expressive style. Appropriate use of references, diagrams, figures etc. Consistent formatting and correct use of bibliographical conventions.
+
+
+PART 3 — THE KCL GENERIC MARKING CRITERIA (LEVEL 6 UG) — A++ STANDARD ONLY
+The College Marking Framework applies four generic dimensions to all Level 6 assessments alongside the project-specific rubric.
+Dimension 1: Subject Knowledge & Understanding — A++ Standard
+Highly detailed systematic understanding of the key concepts, terminology and theories which form the knowledge base of the subject and/or specialist area. Fully informed by specialist and/or new reading. Critical appreciation of competing theories, principles and concepts. Insight in recognition of the interrelationship between fields of study.
+Dimension 2: Intellectual Skills — A++ Standard
+Takes an insightful critical approach with convincing, well-synthesised abstract arguments throughout. An independent well-defined focus of research enquiry. Discerning selection and application of strategies to address complex problems, showing originality. Extensive range of sources evaluated, referenced and applied to unfamiliar situations with flexibility, of excellent quality. Excellent discrimination between relevance of data/theories, analysis of new theory/data, showing critical judgement and originality/creativity.
+Dimension 3: Practical Skills including Digital Capabilities — A++ Standard
+Highly proficient and flexible application of discipline-specific specialist skills. Processing and interpretation of data efficiently to generate new information. Proficient use of relevant computational tools and technologies across all relevant contexts. Exceptional digital literacy skills with critical appreciation and application.
+Dimension 4: Generic/Transferable Skills including Professional Competencies — A++ Standard
+Excellent communication of information and ideas. Excellent awareness of audience and appropriate style maintained throughout. Excellent demonstration of insight and autonomy in evaluating own strengths, weaknesses, and impact. Applies critical and technical reflection to set goals and plans for enhancement. Highly developed ethical accountability in relation to professional and personal codes of conduct.
+Practical implication: Your LSESP chapter, honest evaluation of limitations, and reflective conclusions all contribute to Dimension 4. They are independently scored, not decorative.
+
+
+PART 4 — MANDATORY REPORT STRUCTURE
+4.1 Required Elements in Order
+1. Title page — project title, author name, supervisor name (optional), student ID, date, module code (6CCS3PRJ).
+2. Originality Avowal — must contain verbatim: "I verify that I am the sole author of this report, except where explicitly stated to the contrary." Followed by signature and date. Confirm word count does not exceed 25,000 words.
+3. Abstract — approximately half a page. A person unfamiliar with your project must have a good idea of what your work is about from this alone. States: problem, method, key findings including negative findings. Self-contained — no forward references.
+4. Acknowledgements — brief thanks to supervisor and others who assisted.
+5. Contents Page — all chapters and subsections with page numbers. Stick to sections and subsections — subsubsections are usually avoidable. Include List of Figures if 8+ figures.
+6. Introduction — see Part 5.1.
+7. Background / Literature Review — see Part 5.2.
+8. Body Chapters (typically 3–4 chapters) — design, implementation, methodology, experiments, testing. Structure is project-dependent.
+9. Evaluation — see Part 5.3.
+10. Legal, Social, Ethical, Sustainability and Professional Issues — standalone chapter. See Part 5.4.
+11. Conclusions and Future Work — see Part 5.5.
+12. Bibliography — full bibliographic details for every cited source.
+13. Appendices — source code, test cases, extended tables. Examiners are not obliged to read appendices. Do not put essential content here.
+14. User Guide — required at supervisor's discretion. Walk-through of a typical session. Keep concise. Use diagrams. Can be a chapter or appendix.
+
+
+PART 5 — SECTION-BY-SECTION RULES
+5.1 Introduction Rules
+Rule I-1: Must begin with a statement understandable by a lay reader — not a specialist, not someone in your exact subfield.
+Rule I-2 (A++ criterion — the most explicitly stated differentiator in the entire rubric): The introduction must proceed from the wider concerns of Informatics to the specific subject via an orderly and natural progression of ideas. Broader field/societal context → subfield → specific problem → gap → this project's contribution → report structure. This phrase appears ONLY in the A++ descriptor.
+Rule I-3: End with explicit pointers to every remaining chapter. "Chapter 2 reviews... Chapter 3 describes... Chapter 4 presents..."
+Rule I-4: All four department sub-criteria must be satisfied:
+
+Context for the work ✓
+Problem clearly defined ✓
+Importance motivated ✓
+Relevance established ✓
+
+5.2 Literature Review Rules
+Rule L-1: Organised thematically by concept/problem area — not as a sequential list of papers. Each section must carry an argument, not just a summary.
+Rule L-2: Key technical issues must be summarised. For each area covered, the reader must know what the key challenges, trade-offs, and open problems are.
+Rule L-3: Every paper cited must have a visible connection to your project. If you cannot explain why a paper is in your review, remove it.
+Rule L-4: Sources must be critically analysed — evaluating strengths, weaknesses, limitations, assumptions, and applicability to your context. Not describing what each paper found — evaluating it.
+Rule L-5: Coverage must be comprehensive. Seminal papers in your area plus recent work (within 5 years) must both be present. No major relevant work missing.
+Rule L-6 (A++ criterion): The review must give new insights into the project area not immediately identifiable from the literature itself. Your synthesis must produce something no individual paper says — a gap, a contradiction, an unaddressed combination of problems — that motivates your specific design choices.
+Rule L-7: The bridge from the review to the design must be explicitly written. Do not assume the reader will infer it. Write the sentence: "Based on the limitations identified in Section 2.X, specifically [Y], the following design requirements were established..."
+Hard anti-pattern: "Smith et al. found X. Jones et al. found Y. Brown et al. found Z." — this is description, not critical analysis. It fails sub-criterion 4 regardless of how many papers you cite.
+5.3 Design and Implementation Rules
+Rule D-1: The design must be explicitly motivated by the literature review. The connection must be written, not implied.
+Rule D-2 (explicit sub-criterion): Alternative designs must be considered. For every major design decision, at least one alternative must be named, described, and rejected with specific technical reasons.
+Rule D-3: A rationale for the design approach must be given — why this approach over alternatives, what properties it has that matter for this problem, how it addresses the stated requirements.
+Rule D-4: Every major technology, framework, library, algorithm, and data structure choice requires explicit justification referencing specific requirements or design properties.
+Rule D-5: Testing must cover positive cases (expected behaviour), negative cases (error/edge cases), and boundary conditions. Testing must be shown, not just described.
+Rule D-6 (A++ criterion — first and highest-priority implementation sub-criterion): The implemented product must be sophisticated. Scope and complexity must genuinely exceed the routine.
+Rule D-7: Methodology must be sound and clearly presented — appropriate methods used, reasoning explained, someone else could reproduce the methodology from your description.
+Rule D-8: Software maintenance must be explicitly discussed: dependency risks, modularity/extensibility, technical debt acknowledged, how a future developer would modify the system.
+Rule D-9 (A++ criterion): There must be something distinctly ambitious about what was attempted, carried off with style, with problems rarely defeating the student and clever solutions being the norm. Ambitious scope + full execution = A++. Either alone is insufficient.
+Rule D-10: When implementation deviates from the design plan, document the deviation explicitly — original plan, change made, reason, whether the original goal was still achieved.
+5.4 Evaluation Rules
+The guidelines issue this explicit warning:
+
+"Be warned that many projects fall down through poor evaluation. Simply building a system and documenting its design and functionality is not enough to gain a good mark."
+
+
+"Avoid statements like 'The project has been a complete success and all of the problems in this area of computer science are now solved' — you will be shot down immediately!"
+
+
+"There is no such thing as a perfect project. Even the very best pieces of work have their limitations and you are expected to provide a proper critical appraisal of what you have done."
+
+Rule E-1: Results must be analysed and discussed — not reported. "Accuracy was 94%" is reporting. "The 94% accuracy indicates X because Y, consistent with/contradicting prior work Z" is analysis.
+Rule E-2: Evaluation procedures must be explained before results are shown — what metrics, why those metrics, what baselines, why those baselines.
+Rule E-3 (explicit sub-criterion): Material must be compared and contrasted — against prior work from the literature review, against a null/random baseline, against your stated requirements.
+Rule E-4 (explicit sub-criterion): Comparison of achievements with requirements must be present — a requirements traceability assessment is the gold standard.
+Rule E-5 (explicit sub-criterion): Awareness of potential extensions must be shown — what could be done next and why, derived from the evaluation findings.
+Rule E-6 (explicit sub-criterion): Reflective and justified conclusions must be drawn — what did the results teach you about the problem, the approach, or the field? Supported by evidence.
+Rule E-7 (A++ criterion — most commonly missed): The evaluation must compare results expected from theory including those for alternative designs with those obtained in practice. Return to the alternatives rejected in the design chapter. Demonstrate — empirically or analytically — why your chosen design is superior. This phrase appears ONLY in the A++ descriptor.
+Rule E-8: Evaluation must be both absolute (how good is this in absolute terms?) and comparative (how does this compare to existing techniques, software, etc.?). Both are required.
+5.5 LSESP Rules
+Rule LS-1: Standalone chapter with a reasoned discussion. Not a subsection. Reasoned means each point is argued, not listed.
+Rule LS-2: BCS Code of Conduct must be explicitly referenced and applied to this project. All four areas: (1) Public Interest, (2) Professional Competence & Integrity, (3) Duty to Relevant Authority, (4) Duty to Colleagues — each connected to your specific project.
+Rule LS-3: All three department sub-criteria must be satisfied:
+
+Relevant professional standards indicated ✓
+Social and ethical implications outlined ✓
+Thoughtful discussion of project impact: public well-being, environment, sustainability, economic, commercial factors ✓
+
+Rule LS-4 (A++ criterion): The discussion must cover ALL relevant aspects: public well-being, computer security, environmental and sustainability aspects, economic and commercial factors, globalization, accessibility, IP and related issues, software trustworthiness. The word "all" appears only at A++.
+Rule LS-5: Domain-specific ethical issues unique to your project must be identified. Generic BCS + GDPR that applies to any software project is insufficient for A++. Domain-specific issues by project type:
+
+ML/AI: algorithmic bias, training data bias, dual-use potential, explainability
+Security research: dual-use implications (weakness identification enables both defence and attack)
+Healthcare/clinical data: informed consent, anonymisation, impact on patient outcomes
+Educational tools: accuracy of presented information, accessibility, pedagogical ethics
+Knowledge/data systems: data representativeness, language accessibility, data sovereignty
+
+Rule LS-6: Legislation must be cited directly. Name the specific regulation, cite the specific articles that apply, explain your project's compliance with those articles.
+5.6 Conclusions and Future Work Rules
+The guidelines provide explicit examples and explicit bans.
+Good conclusions (from guidelines):
+
+"The use of overloading in C++ provides a very elegant mechanism for transparent parallelisation of sequential programs"
+"The overheads of linear-time n-body algorithms makes them computationally less efficient than O(n log n) algorithms for systems with less than 100000 particles"
+
+Banned (from guidelines verbatim):
+
+"I learned a lot about C++ programming..."
+"Simulating colliding galaxies can be real fun..."
+
+These are transferable principles about the field vs personal reflections. Only the former belongs in conclusions.
+Rule C-1: Conclusions must state what was learned, not what was built. "We built a system that does X" is a summary, not a conclusion.
+Rule C-2: Future work must be specific enough to function as one of: a plan for making the software marketable, ideas for an MPhil/PhD continuation, or a discussion of how the project could accommodate future requirements. Not generic improvement wishes.
+Rule C-3 (A++ criterion): Conclusions must make accurate predictions of results that would be obtained by applying the present work in new areas. This appears ONLY in the A++ descriptor. Forward-looking analytical predictions: "If this approach were applied to [different domain], we would predict [specific outcome] because [reasoning from our findings]."
+Rule C-4: Limitations must include: what the limitation is, why it exists (traceable to a design decision or constraint), and what could be done to address it.
+Rule C-5: No personal reflections — not in conclusions, not anywhere in the report.
+
+
+PART 6 — THE SEVEN NON-NEGOTIABLE 90%+ TRAITS
+These seven characteristics appear only in the A++ descriptor and are absent from all lower grade levels. Missing any single one makes 90%+ unachievable regardless of everything else.
+Trait 1: The Introduction Proceeds from Wider Informatics to Specific Subject
+Exact rubric wording: "Proceeds from the wider concerns of Informatics to the specific subject of the report by way of an orderly and natural progression of ideas."
+This phrase appears ONLY in the A++ Introduction descriptor. Broader field/societal context → subfield → specific problem → gap → this project. A reader is carried from broad to specific without jumps.
+Test: Read your introduction's first three paragraphs. If they begin with your specific system or project, rewrite. They must begin with the broader field.
+Trait 2: The Literature Review Gives New Insights
+Exact rubric wording: "The Review is a penetrating analysis, showing an impressive grasp of the subject and excellent judgement in the selection of previous work that should be applied in project. It gives new insights into the project area, not immediately identifiable from literature."
+Your synthesis must produce something the individual papers don't say alone. Not achievable by reading more papers — achievable by thinking across papers to identify gaps, contradictions, or patterns they individually don't reveal.
+Test: Read the last paragraph of your literature review. Does it state an insight you arrived at through synthesis — not one stated in any single paper? If no, rewrite.
+Trait 3: The Project Is Genuinely Ambitious and Fully Executed
+Exact rubric wording: "There is something distinctly ambitious about what is being attempted and the student has carried off the attempt with style, rarely defeated by problems encountered and more typically finding some clever solution."
+Both words matter: ambitious (scope exceeds the routine) AND carried off (execution matches the scope). Ambitious scope poorly executed or modest scope excellently executed — neither is A++. Must be both.
+Test: Would a knowledgeable CS marker describe this project as ambitious? Does the implementation show clever solutions to non-trivial problems?
+Trait 4: The Evaluation Covers Alternative Designs
+Exact rubric wording: "Evaluates the artefact, comparing results expected from theory (including those for alternative designs) with those obtained in practice."
+The phrase "including those for alternative designs" appears ONLY in the A++ Evaluation descriptor. Return to the alternatives rejected in the design chapter. Demonstrate — with evidence or analytical argument — why your chosen design is superior.
+Test: Does your evaluation chapter contain a section explicitly addressing the alternative designs from your design chapter and explaining why your approach outperforms them based on results?
+Trait 5: Every Design Decision Is Traceable Across the Report
+Source: KCL Generic Marking Criteria Level 6, Intellectual Skills dimension.
+Every major design decision must trace along this chain without gaps: literature gap → requirement → design choice → implementation → test → evaluation result.
+Test: Pick any major design decision. Can you trace it from a specific literature review finding, through a numbered requirement, through a design justification, to a specific test, to a specific evaluation result? If any link is missing, fix it.
+Trait 6: Conclusions State Intellectual Learnings with Forward Predictions
+Exact rubric wording: "States clear conclusions from the work done, making accurate predictions of results that would be obtained by applying the present work in new areas."
+Intellectual learnings are transferable principles about the field (see the guidelines' C++ overloading example). Forward predictions specify what would happen if the work were applied to a different domain, with reasoning. Both are required. Neither a project summary nor personal reflections qualify.
+Test: Read each conclusion. Could it appear in a research paper's conclusion section? Does it state a principle about the field? Does it make a specific prediction for a new area? If it reads as a student project reflection, rewrite it.
+Trait 7: LSESP Covers All Relevant Aspects with Domain-Specific Depth
+Exact rubric wording: "Thoughtful discussion of all relevant aspects such as: effects on the public well-being, computer security, environmental and sustainability aspects, economic and commercial factors, globalization, accessibility, Intellectual Property and related issues, software trustworthiness."
+"All" is the operative word. Generic BCS + GDPR treatment does not achieve A++. Domain-specific, project-specific ethical analysis of all dimensions does.
+Test: Could your LSESP chapter be transplanted into a different dissertation without changing anything? If yes, it's not specific enough for A++.
+
+
+PART 7 — WRITING RULES
+W-1: Every claim needs evidence. Citation, empirical evidence, or explicit logical argument. No unsupported assertions.
+W-2: Justification language.
+
+BANNED: "X was chosen because it is widely used / popular / easy to use / natural choice"
+REQUIRED: "X was chosen because [specific technical property] satisfies [specific requirement Rn identified in Section Y]. [Alternative Z] was considered and rejected because [specific technical limitation W]."
+
+W-3: Results must be interpreted not reported.
+
+BANNED: "Table 3 shows accuracy of 94.2%."
+REQUIRED: "The 94.2% accuracy demonstrates [interpretation], which is consistent with/contradicts [specific prior work from Section 2.X] because [reasoning]."
+
+W-4: Limitations must have structure.
+
+BANNED: "The system has some limitations."
+REQUIRED: "[Limitation X] occurs because [cause Y], stemming from [design decision in Section Z]. Addressable in future work by [specific approach W], requiring [condition V]."
+
+W-5: Negative results are required. The guidelines explicitly state you will be shot down for claiming complete success. Intellectual honesty is directly assessed under criterion 3 of Part 0.1.
+W-6: Future work must be specific and derived.
+
+BANNED: "Future work could improve scalability / performance / accuracy."
+REQUIRED: "Future work should evaluate [specific technique W] applied to [specific problem] to test [specific hypothesis H], addressing the limitation identified in Section 5.2. Validated using [specific methodology]."
+
+W-7: Abstract is self-contained. Problem, method, key findings including negative findings. No forward references. No vague statements.
+W-8: Tone. Academic, precise, third-person in analytical sections. First-person acceptable in motivation and reflection only. Never lay language where precise technical vocabulary exists.
+W-9: Figures and tables. Every figure must be: (1) referenced in text before it appears, (2) captioned to convey meaning independently, (3) accompanied by explanatory prose telling the reader what to observe.
+W-10: Literature review is thematic not chronological. Organised by concept or problem area. Every section concludes with a statement connecting to the gap your project addresses.
+W-11: The bridge must be stated. Write the sentence explicitly: "Based on the limitations identified in Section 2.X, specifically [Y], the following design requirements were established..."
+
+
+PART 8 — ANTI-PATTERNS
+8.1 Anti-Patterns That Prevent 90%+
+1. Introduction starting at the project level. Beginning with "In this project I built..." rather than the wider field context. The single most explicitly stated A++ criterion and the most commonly missed.
+2. Literature review that doesn't bridge to the design. Even an excellent review loses its value if the design chapter begins without referencing the gaps or findings identified. The bridge sentence must be written.
+3. Evaluation that doesn't cover alternative designs. The explicit A++ evaluation criterion. Work in the 75–85% range typically evaluates only the implemented system. A++ work returns to the design chapter and evaluates alternatives.
+4. Descriptive literature review. Papers summarised one by one without synthesis. Fails sub-criterion 4 (critically analysed) regardless of how many papers are cited.
+5. Design choices without alternatives. The explicit sub-criterion is "alternative designs have been considered." A design chapter that only describes the chosen approach fails this criterion.
+6. Generic future work. "Improve scalability" is a wish, not future work. Must be specific, named, derived from the project's actual findings, and actionable.
+7. Conclusions that describe rather than learn. Describing what was built in the conclusions is repetition of the implementation chapter, not intellectual contribution.
+8. LSESP interchangeable with any other project. If it doesn't identify domain-specific issues and cover all dimensions, it does not achieve A++.
+9. Claiming complete success. The guidelines explicitly warn against this. Markers will identify your limitations — you must identify them first and more rigorously.
+10. Personal reflections in conclusions. Explicitly banned in the guidelines. "I learned a lot about X" and "this project was rewarding" are not conclusions.
+8.2 Things That Look Strong But Are Insufficient for 90%+
+Appears StrongWhy It's InsufficientLong, well-organised literature reviewIf it doesn't synthesise to a gap and bridge explicitly to design, scores below A++ regardless of length500+ tests all passingIf evaluation doesn't cover alternative designs and compare against prior work, overall grade is cappedHonest limitations sectionMust also include causes traceable to design decisions and specific remedies — not just a listWell-justified design choicesIf justifications don't reference the literature review, the traceability chain is brokenLSESP covering BCS and GDPRGeneric coverage is insufficient. ALL dimensions + domain-specific issues required for A++Conclusions summarising achievementsSummaries are A-grade. Intellectual learnings + predictions for new areas = A++Sophisticated system, modest write-upThe guidelines are explicit: software is a means to the report, not the end
+
+
+PART 9 — SURFACE-LEVEL VS DEEP WORK
+Drawn from patterns across the five sample dissertations. Surface = typical 65–75%. Deep = 85–90%+.
+
+Design Justification
+SURFACE: "ResNet was chosen because it performs well on image tasks and is widely used in the literature."
+DEEP: "ResNet was chosen over VGG-16 and InceptionV3 because its residual connections mitigate vanishing gradients in networks deeper than 50 layers [ref], critical given the depth requirement identified in Section 2.3. VGG-16 was eliminated due to its 3–4× higher parameter count at equivalent accuracy, exceeding the inference latency requirement NFR3. InceptionV3 was considered but its branched architecture is incompatible with the Grad-CAM visualisation method required by FR7."
+
+Literature Review Synthesis
+SURFACE: "Several papers have proposed methods for fairness in facial detection. Smith (2020) proposed pre-processing augmentation. Jones (2021) proposed threshold adjustment. Brown (2022) found that environmental variables affect performance."
+DEEP: "Existing fairness interventions fall into two categories: pre-processing approaches (data augmentation and resampling) and post-processing approaches (threshold adjustment). Pre-processing achieves demographic parity at the cost of 3–8% overall accuracy degradation (Smith, 2020; Jones, 2021). Post-processing preserves accuracy but requires demographic labels at inference time, violating privacy constraints in most deployment contexts (Brown, 2022). Neither category addresses the root cause: environmental variable sensitivity (brightness, contrast) affects dark-skinned faces disproportionately due to training data distribution bias. This gap — fairness intervention without demographic labelling or accuracy loss — motivates the photo-editing approach in Chapter 3."
+
+Testing
+SURFACE: "We wrote 50 unit tests that all pass, confirming the system works correctly."
+DEEP: "Unit tests were designed to exercise boundary conditions at the input preprocessing stage, edge cases in the author-lookup function (empty commit histories, commits with redacted emails), and error propagation across the REST routes. For each route, both positive cases (using real, pre-written phenotypes) and negative cases (using false repository names, malformed request bodies, and expired authentication tokens) were tested. The 821 tests achieve full route coverage. Quality assurance tables (Tables 5.1–5.3) rate each requirement's implementation strength; UR4 and AR4 are rated Moderate because step-file retrieval requires two sequential routes rather than a single operation — a limitation discussed in Section 5.2."
+
+Evaluation
+SURFACE: "Our system achieves 94% accuracy, which demonstrates strong performance."
+DEEP: "The 94.2% accuracy of the unmitigated classifier under the paper's original settings (Figure 5.1, purple line) is consistent with the 93.4% reported in the original MaMaDroid paper [13], validating our experimental implementation. Removing the spatial and temporal bias identified in Section 2.1.2 reduces performance to 28.4% AUT, a 69.1% decrease. This degradation aligns precisely with the bias removal findings in the TESSERACT paper [14], providing independent validation of their methodology. The base performance of 28.4% is meaningfully above the random baseline of 16.4%, indicating the classifier retains genuine discriminative capability even under realistic conditions, but well below the operational requirement of >80% AUT established in Section 3.1."
+
+Conclusions
+SURFACE: "In conclusion, this project successfully built a web-based system for teaching binary relations in Discrete Mathematics. The three interactive tools were implemented and all functional requirements were met."
+DEEP: "The key findings establish that: (1) web-based interactive learning tools can achieve sub-second response times for relation sets up to 50 elements with client-side computation, suggesting server-side computation is unnecessary for this complexity class; (2) the accessibility-performance trade-off is near-zero for interactive graph rendering at WCAG AA compliance, contradicting the common assumption that accessibility features significantly impact performance; (3) step-by-step algorithm visualisation produces measurably better student comprehension than end-state display, as evidenced by the competency question results in Section 8.5. Applied to broader educational CS tooling, these findings predict that client-side interactive visualisation can replace server-side computation for graph algorithms with sets up to approximately 100 nodes, enabling simpler and more accessible deployments without performance trade-off."
+
+LSESP
+SURFACE: "This project follows GDPR and the BCS Code of Conduct. Data is processed securely and the system is designed with public benefit in mind."
+DEEP: "This project processes [specific data type] which constitutes personal data under GDPR Article 4(1) [EU Regulation 2016/679]. The lawful basis for processing is Article 6(1)(f) (legitimate interests), justified because [specific reason]. Data minimisation per Article 5(1)(c) is achieved by [specific mechanism]. The BCS Code of Conduct's Public Interest requirement is satisfied by [specific contribution]. The dual-use risk specific to this project is [domain-specific risk]: the adversarial techniques demonstrated here could be used to [specific harm], mitigated by [specific measure]. Environmental sustainability: [specific computation efficiency consideration or carbon cost acknowledgement]. Commercial factors: [specific IP considerations for tools and datasets used]."
+
+
+PART 10 — PRE-SUBMISSION ENFORCEMENT CHECKLIST
+10.1 The 7 Non-Negotiable 90%+ Checks
+A single NO means 90%+ is unachievable until it is fixed.
+
+ TRAIT 1: Does my introduction begin with the wider Informatics/societal context and narrow logically to my specific project — not start with the project itself?
+ TRAIT 2: Does my literature review produce a synthesis insight not stated in any individual paper, and does it explicitly state the gap that motivates my design?
+ TRAIT 3: Is the scope genuinely ambitious and is it fully executed without major abandoned aims?
+ TRAIT 4: Does my evaluation explicitly compare results for the alternative designs rejected in the design chapter — not just for the implemented design?
+ TRAIT 5: Can I trace every major design decision from a specific literature review finding → numbered requirement → design justification → implementation → test → evaluation result?
+ TRAIT 6: Do my conclusions state transferable intellectual principles and make specific predictions for applying the work in new areas?
+ TRAIT 7: Does my LSESP cover domain-specific issues unique to this project and ALL listed dimensions: public well-being, security, environment/sustainability, economics, IP, trustworthiness?
+
+10.2 Section-Level Checks
+Word count:
+
+ Main body does not exceed 25,000 words
+ Source code is in appendix, not main body
+
+Introduction:
+
+ Abstract is self-contained: problem, method, key finding including negative findings
+ Report structure described with explicit chapter pointers
+ All four sub-criteria satisfied: context, problem defined, importance motivated, relevance established
+
+Literature Review:
+
+ Organised thematically, not as sequential paper list
+ Each section concludes with what remains unresolved
+ Final paragraph explicitly states the research gap this project addresses
+ All five sub-criteria satisfied: structured/coherent, key issues summarised, related to project, critically analysed, comprehensively covered
+
+Requirements & Specification:
+
+ Requirements formally numbered (FR1, UR1, AR1, etc.)
+ Both functional and non-functional requirements present
+ Alternative designs explicitly considered
+
+Design & Implementation:
+
+ Every major design decision references the specific literature review finding that motivated it
+ Every major technology/framework choice has push/pull justification
+ Deviations from original design plan documented
+ Software maintenance discussed explicitly
+ All four implementation sub-criteria satisfied: sophisticated product, choices justified, adequate/effective testing, sound methodology
+
+Evaluation:
+
+ Baselines defined before results presented
+ Evaluation covers alternative designs (A++ requirement)
+ All results interpreted with causal explanations, not just stated
+ Negative/unexpected results reported and explained
+ Critical appraisal of strengths AND weaknesses present
+ All six evaluation sub-criteria satisfied
+
+LSESP:
+
+ BCS Code of Conduct: all four areas with project-specific application
+ Specific legislation cited directly with article numbers
+ Domain-specific ethical issues identified and discussed
+ All dimensions covered: public well-being, security, environment, sustainability, economics, commercial, IP, trustworthiness
+
+Conclusions:
+
+ No personal reflections
+ Each conclusion states a transferable intellectual principle, not a project summary
+ Accurate predictions for applying work in new areas included
+ Future work is specific, named, derived from findings, actionable
+ Limitations include causes and specific remedies
+
+General Scholarship:
+
+ Consistent formatting throughout
+ Bibliography in single consistent format with all required fields
+ All figures referenced in text and accompanied by explanatory prose
+ Writing is clear, coherent, repetition-free
+ Free of grammatical and typographical errors
+
+
+
+PART 11 — BANNED VS REQUIRED PHRASES
+BANNEDREQUIRED"X was chosen because it is widely used.""X was chosen because [specific technical property] satisfies [requirement Rn]. [Alternative Z] was rejected because [specific limitation].""In this project, we built a system that..." (as opening)"[Broader field/societal context] → [subfield] → [specific gap] → This project addresses this gap by...""Table 3 shows accuracy of 94.2%.""The 94.2% accuracy indicates [interpretation], consistent with/contradicting [prior work ref] because [reason].""The project has been a complete success.""The project achieved [specific objectives]. Key limitations include [X due to Y], addressable by [Z].""Future work could improve performance/scalability.""Future work should evaluate [specific technique] applied to [specific problem] to test [specific hypothesis], addressing the limitation in Section 5.2.""We considered GDPR.""This project processes [data type] under GDPR Article 4(1) [EU Reg 2016/679]. Lawful basis: Article 6(1)(X) because [justification]. Data minimised per Article 5(1)(c) by [mechanism].""Smith found X. Jones found Y." (as lit review)"[Thematic synthesis]: These approaches collectively establish [synthesis not in any single paper]. None addresses [gap] because [reason]. This motivates [specific design choice].""In conclusion, we built X which does Y.""The key finding is that [transferable principle]. Applied to [new area], this predicts [specific outcome] because [reasoning from findings].""I learned a lot about X."REMOVE. Replace with intellectual finding about the field."The system has some limitations.""[Limitation X] occurs because [cause Y] from [design decision Z]. Addressable by [approach W] requiring [condition V].""We used Python because it is popular for ML.""Python was selected because its scikit-learn library provides [specific required framework] and NumPy handles [specific data structure requirement from NFRn]. [Alternative] was considered but lacks [specific tooling]."
+
+
+PART 12 — WHAT THE FIVE SAMPLE REPORTS TAUGHT US
+R01 — Phenoflow GitHub Backend (Node.js/Express)
+What it demonstrates for A++:
+
+Every implementation decision has an explicit "Consideration" subsection immediately after the code, explaining why that approach was chosen over alternatives. This is the gold standard for implementation justification — rule D-4.
+Formal use cases → FR/UR/AR requirements → specification tables with priorities. Every requirement numbered and traced.
+821 unit tests with both positive (real data) and negative (false/erroneous data) cases. Test results shown via console screenshot. Requirements mapped to implementation strength (Strong/Moderate) in QA tables.
+The conclusion is honest: GitHub is NOT currently fit for purpose. Negative finding stated clearly and explained technically — rule W-5.
+GDPR cited as EU Regulation 2016/679 directly. Healthcare bias in ML discussed as domain-specific issue. Informed consent addressed — rule LS-6.
+
+Where it falls short of A++: Introduction doesn't fully achieve the wider-Informatics-to-specific-subject arc. Evaluation doesn't explicitly cover alternative designs.
+
+R02 — Discrete Math Tutor (Web App)
+What it demonstrates for A++:
+
+Background (mathematical concepts) and Literature Review (prior interactive learning tools) separated into distinct chapters — the most structurally sophisticated approach when the domain knowledge and prior work are genuinely different things.
+Literature review explicitly identifies gaps in existing tools and maps each gap to a project objective — the bridge is written.
+Multi-dimensional evaluation: performance (Google Lighthouse), accessibility (WCAG), compatibility (BrowserStack), critical appraisal. Uses external tools for objective measurement that self-assessment cannot replicate — rule E-8.
+Testing tool choice (Mocha over alternatives) explicitly justified with specific technical reasons.
+Honest about specific limitations: touch events not supported, set size capped at 50 — with reasons.
+
+Where it falls short of A++: LSESP is one page. Introduction doesn't achieve the wider Informatics progression.
+
+R04 — Adversarial ML Evaluation of MaMaDroid — THE STRUCTURAL MODEL
+This is the closest to A++ of the five. Study it as the benchmark.
+What it demonstrates for A++:
+
+Abstract immediately establishes wider context (mobile malware as global threat), narrows to ML classifiers, to adversarial ML, to MaMaDroid, to this specific evaluation. The orderly natural progression from broader to specific is achieved in the abstract itself.
+Specification & Design chapter organises every experiment with its own subsection containing: what is being measured, what the baseline(s) are and why, what the hypothesis is, what the control variables are, what constitutes success. This is the gold standard for pre-specifying experiments — rule E-2.
+Four distinct baselines: random (floor), paper (original settings upper bound), base (realistic distribution), base+poisoned. Every result compared against all four — rule E-3.
+Ablation study: individual mitigations tested before combined system. This answers "which component contributes how much" — a question only rigorous evaluation design can answer.
+Related Work chapter covers alternative approaches with explicit analysis of their flaws using the same evaluation framework applied to the main system. This directly addresses Trait 4.
+Conclusions list four concrete intellectual learnings as bullet points. All are transferable principles about adversarial ML, none are project descriptions. All could appear in a research paper — rule C-1.
+Future work has five named, specific experiments each with rationale derived from the project's own findings — rule C-2.
+Negative results documented and explained: secml attacks were ineffective. This is reported, explained, and used to justify the adopted approach — rule W-5.
+LSESP explicitly addresses dual-use implications of adversarial ML research — the specific ethical tension of security research where revealing weaknesses enables both defence and attack — rule LS-5.
+
+
+R05 — Knowledge Graph Generation (Semantic Web)
+What it demonstrates for A++:
+
+Three-chapter structural separation: Background (foundational concepts) + Context (domain and tools) + Literature Review (KG techniques and evaluation methods). Most sophisticated structural organisation of the five.
+Knowledge graph quality assessment uses a published academic framework (Accuracy/Coverage/Succinctness with specific sub-criteria) — evaluation grounded in literature, not invented ad hoc — rule E-2.
+User survey conducted for understandability measurement — external validation beyond self-assessment.
+Scalability assessment with actual timing measurements on real data.
+Changes During Implementation section documents every deviation from the design plan and explains why — rule D-10.
+Software maintenance section explicitly names five dependency risks with explanations — rule D-8.
+LSESP addresses FAIR Principles (Findable, Accessible, Interoperable, Reusable) as a domain-specific ethical standard beyond generic BCS + GDPR — rule LS-5.
+~80 references, highest of the five, with mix of academic papers, domain standards, and tool documentation appropriate for an implementation-heavy project.
+
+
+
+PART 13 — ENFORCEMENT MANDATE
+This rule system is the permanent standard for this dissertation project. Every section, every paragraph, every claim must be measured against these rules before being considered complete.
+The ten questions that must all be answered YES before any section is ready:
+
+Does the introduction proceed from the wider Informatics context to the specific subject? (Trait 1)
+Does the literature review produce a synthesis not in any individual paper and bridge explicitly to the design? (Trait 2)
+Is the scope genuinely ambitious and fully executed? (Trait 3)
+Does the evaluation cover alternative designs explicitly? (Trait 4)
+Is every major design decision traceable across the full report? (Trait 5)
+Do conclusions state intellectual learnings with predictions for new areas? (Trait 6)
+Does LSESP cover domain-specific issues and all listed dimensions? (Trait 7)
+Does every section satisfy its specific sub-criteria from the department rubric? (Part 1.1)
+Is the word count well under 25,000 words in the main body? (Part 0.4)
+Does the report demonstrate all four things stated in Part 0.1?
+
+A NO on any of these ten questions means the work is not ready.

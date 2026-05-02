@@ -1,0 +1,20 @@
+{
+  "document_id": "de_water_einhornenergie_001",
+  "source_filename": "de_water_einhornenergie_001.pdf",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "EINHORN-ENERGIE",
+    "utility_type": "water",
+    "bill_number": "3000000",
+    "bill_date": "2021-01-15",
+    "billing_period_start": "2020-01-01",
+    "billing_period_end": "2020-12-31",
+    "due_date": "2021-01-29",
+    "total_amount_due": -36.71,
+    "currency": "EUR",
+    "account_number": "VKXXXXXXXXX",
+    "consumption_amount": 138,
+    "consumption_unit": "m³"
+  }
+}

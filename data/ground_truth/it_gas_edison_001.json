@@ -1,0 +1,20 @@
+{
+  "document_id": "it_gas_edison_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "EDISON",
+    "utility_type": "gas",
+    "bill_number": "0000000000",
+    "bill_date": "2016-03-09",
+    "billing_period_start": "2016-01-01",
+    "billing_period_end": "2016-02-29",
+    "due_date": "2016-04-10",
+    "total_amount_due": 52.33,
+    "currency": "EUR",
+    "account_number": "1234567891",
+    "consumption_amount": 98.1415,
+    "consumption_unit": "Smc"
+  },
+  "source_filename": "it_gas_edison_001.pdf"
+}

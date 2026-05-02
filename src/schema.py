@@ -52,7 +52,7 @@ class BillExtraction(BaseModel):
         """Human-readable schema description injected into the LLM prompt
         via the {schema_description} placeholder."""
         lines = [
-            "provider_name (string): Utility company name",
+            "provider_name (string): Utility company name without legal suffixes (e.g. Ltd, GmbH, SRL)",
             "utility_type (string): electricity / gas / water",
             "bill_number (string): Invoice or bill reference number",
             "bill_date (date, YYYY-MM-DD): Date the bill was issued",

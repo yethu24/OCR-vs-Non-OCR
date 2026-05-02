@@ -1,0 +1,20 @@
+{
+  "document_id": "de_electricity_zmainfranken_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "ÜZ Mainfranken",
+    "utility_type": "electricity",
+    "bill_number": "654321",
+    "bill_date": "2019-12-31",
+    "billing_period_start": "2019-01-01",
+    "billing_period_end": "2019-12-31",
+    "due_date": "2020-01-17",
+    "total_amount_due": 5.79,
+    "currency": "EUR",
+    "account_number": "123456",
+    "consumption_amount": 2555.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "de_electricity_zmainfranken_001.pdf"
+}

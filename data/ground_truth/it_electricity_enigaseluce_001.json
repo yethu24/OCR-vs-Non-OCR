@@ -1,0 +1,20 @@
+{
+  "document_id": "it_electricity_enigaseluce_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Eni gas e luce",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": null,
+    "billing_period_start": "2020-04-11",
+    "billing_period_end": "2020-06-09",
+    "due_date": null,
+    "total_amount_due": 172.85,
+    "currency": "EUR",
+    "account_number": null,
+    "consumption_amount": 737.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "it_electricity_enigaseluce_001.pdf"
+}

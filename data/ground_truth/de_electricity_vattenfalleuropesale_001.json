@@ -1,0 +1,20 @@
+{
+  "document_id": "de_electricity_vattenfalleuropesale_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Vattenfall Europe Sales",
+    "utility_type": "electricity",
+    "bill_number": "713 001 042 304",
+    "bill_date": "2019-12-19",
+    "billing_period_start": "2018-11-15",
+    "billing_period_end": "2019-11-27",
+    "due_date": "2020-01-04",
+    "total_amount_due": 233.39,
+    "currency": "EUR",
+    "account_number": "836 590 183 474",
+    "consumption_amount": 2535.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "de_electricity_vattenfalleuropesale_001.pdf"
+}

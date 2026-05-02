@@ -10,6 +10,48 @@ Rules:
 - For dates, use ISO 8601 format (YYYY-MM-DD).
 - For currency, use the ISO 4217 code (e.g. GBP, EUR, USD).
 - For consumption_unit, use standard abbreviations (kWh, m3, litres, etc.).
-- For total_amount_due and consumption_amount, use numeric values only (no currency symbols or thousand separators).
+- For provider_name, return the canonical utility company name WITHOUT legal-form suffixes (e.g., Ltd, Limited, Inc, LLC, GmbH, SRL/S.r.l., S.p.A., S.A., s.c. a r.l., etc.). Keep the core brand name only.
+- For total_amount_due and consumption_amount, output JSON numbers (not strings): exactly one "." as the decimal separator, with no thousand separators in the output (no grouping commas, dots, apostrophes, or spaces).
+- Printed amounts may follow different locale styles (e.g. UK-style 1,234.56 vs continental 1.234,56 or 1 234,56). Infer which style the bill uses from how several amounts or usage figures are written on the same page; do not infer it from currency, language, or provider alone.
+- Strip currency symbols and non-numeric decoration from your reading of the line; keep the value the bill states—do not rescale (e.g. do not convert thousands to units) unless the bill explicitly ties that line to a different unit.
 - Do not invent or hallucinate values. Only extract what is explicitly stated on the bill.
 - Return ONLY JSON. Do not include any other text. *** Important ***
+
+NUMBER PARSING (canonical output — avoid locale mismatch)
+
+Target format (all numeric fields: total_amount_due, consumption_amount, and any other amounts you emit as numbers):
+Emit a single JSON number per field: use ASCII dot . only for decimals, never emit grouping separators (no ,, no . as thousands, no spaces as thousands). Examples: 2535, 3592.4, -94.49, 0.59.
+
+Step 1 — Detect the bill’s print convention (read-only, before parsing any amount):
+From the same document (headers, footers, tables, payment slip, tax lines), infer which convention is used for money and quantities:
+
+Type A — “DE/EU print” (common on German and many EU bills):
+
+Thousands: . (optional groups of three)
+Decimal: , (often 2 fractional digits for money; variable for kWh)
+Signals: EUR, German (or EU) wording, dates like 31.12.2019, amounts like 1.038,43 or 3.592,4 kWh, “Brutto/Netto/USt”.
+Type B — “US/UK print” (common on US/UK/CA/AU sample bills):
+
+Thousands: ,
+Decimal: .
+Signals: $, USD, GBP, “Amount due”, dates like 04/21/2017, amounts like $1,234.56.
+Type C — “Sparse / ambiguous”:
+
+Only one separator appears, or both . and , appear but not in a consistent pattern across the bill, or OCR garbles separators. Do not guess.
+Step 2 — Normalize every printed number to the target format:
+
+If Type A: remove . used as thousands; replace , with . for the decimal point; then parse.
+
+2.535 + unit kWh in a DE context ⇒ 2535 (not 2.535).
+3.592,4 ⇒ 3592.4.
+If Type B: remove , used as thousands; keep . as decimal.
+
+1,234.56 ⇒ 1234.56.
+If Type C or still ambiguous after applying the chosen type: set that numeric field to null (do not pick the “smaller” reading by default).
+
+Step 3 — Consistency lock (same bill, one convention):
+After you choose Type A or B from Step 1, every parsed amount and consumption on that bill must use that same rule. If any line would require the opposite rule to make sense, treat the bill as Type C for that field and output null for that field only (or for all amounts if the conflict is global).
+Hard rules:
+
+Never copy thousands separators into JSON numbers.
+Never output European-style decimals with a comm

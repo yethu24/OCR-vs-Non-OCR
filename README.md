@@ -95,11 +95,11 @@ SPEC.md              Full specification and architecture
 
 ```json
 {
-  "document_id": "GB_electricity_ovo_001",
+  "document_id": "gb_electricity_ovo_001",
   "annotated_by": "student",
   "annotation_date": "2026-03-30",
   "fields": {
-    "provider_name": "OVO Energy Ltd",
+    "provider_name": "OVO Energy",
     "utility_type": "electricity",
     "bill_number": null,
     "bill_date": "2026-03-10",
@@ -151,5 +151,5 @@ Key settings:
 
 ## Notes
 
-- **Provider name suffixes**: Bills often include legal suffixes (e.g., "Acque Veronesi s.c. a r.l."). Ground truth uses the canonical name as determined by the annotator. Evaluation reports both exact match and Levenshtein similarity to account for this.
+- **Provider name suffixes**: Bills often include legal suffixes (e.g., "Acque Veronesi s.c. a r.l."). Ground truth and evaluation treat `provider_name` as the canonical name without legal suffixes.
 - **OCR language**: Tesseract language is set per document from the manifest `language` column, not globally. A single run can process bills in multiple languages.

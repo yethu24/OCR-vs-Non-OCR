@@ -1,0 +1,20 @@
+{
+  "document_id": "de_electricity_stadtwerkepirnaenerg_001",
+  "source_filename": "de_electricity_stadtwerkepirnaenerg_001.pdf",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "Stadtwerke Pirna Energie",
+    "utility_type": "electricity",
+    "bill_number": null,
+    "bill_date": "2014-03-12",
+    "billing_period_start": "2013-04-01",
+    "billing_period_end": "2014-03-06",
+    "due_date": "2014-04-01",
+    "total_amount_due": 138.36,
+    "currency": "EUR",
+    "account_number": "119.490.048-1",
+    "consumption_amount": 1538,
+    "consumption_unit": "kWh"
+  }
+}

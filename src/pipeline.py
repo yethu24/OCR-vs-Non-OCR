@@ -132,10 +132,12 @@ def _process_document(
 
         # Stage 3: OCR-text path vs vision path
         if mode == "ocr_text":
-            # OCR path: run Tesseract on each page, concatenate text, send to LLM
+            # OCR path: run Tesseract on the first 2 pages (baseline parity with vision),
+            # concatenate text, send to LLM
+            ocr_images = images[:2]
             with Timer() as t_ocr:
                 ocr_texts = [
-                    ocr_engine.extract_text(img, doc.language) for img in images
+                    ocr_engine.extract_text(img, doc.language) for img in ocr_images
                 ]
                 ocr_text = "\n\n".join(ocr_texts)
 
@@ -210,6 +212,10 @@ def _process_document(
         "llm_model": config["llm"]["model"],
         "model_id": model_id,
         "pipeline_mode": mode,
+        "token_usage": {
+            "input_tokens": int(token_usage.get("input_tokens", 0) or 0),
+            "output_tokens": int(token_usage.get("output_tokens", 0) or 0),
+        },
         "estimated_cost_usd": cost,
         "timestamp": datetime.now().isoformat(),
     }

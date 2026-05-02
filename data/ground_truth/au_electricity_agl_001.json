@@ -1,0 +1,20 @@
+{
+  "document_id": "au_electricity_agl_001",
+  "annotated_by": "student",
+  "annotation_date": "2026-04-01",
+  "fields": {
+    "provider_name": "AGL",
+    "utility_type": "electricity",
+    "bill_number": "xxxx xxxx xxxx xxxx xxxx",
+    "bill_date": "2023-04-05",
+    "billing_period_start": "2023-03-05",
+    "billing_period_end": "2023-04-04",
+    "due_date": "2023-04-23",
+    "total_amount_due": 63.7,
+    "currency": "AUD",
+    "account_number": "123 4567 891X",
+    "consumption_amount": 280.0,
+    "consumption_unit": "kWh"
+  },
+  "source_filename": "au_electricity_agl_001.pdf"
+}
