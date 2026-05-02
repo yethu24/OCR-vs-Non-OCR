@@ -1,0 +1,413 @@
+% ============================================================
+%  Chapter 3: Literature Review
+%  Included from main.tex via \input{litreview}.
+%  Do NOT add \documentclass or \begin{document} here.
+%  Citation style: IEEEtran.bst. All \cite keys must resolve
+%  to entries in references.bib.
+% ============================================================
+
+\chapter{Literature Review}
+\label{chap:litreview}
+
+This chapter critically reviews the prior work that bears on the
+dissertation's design decisions and research gap. Each section argues
+against a named criterion rather than summarising papers in sequence,
+and every citation is tied to a specific downstream consequence for
+the design chapter. Ethical, legal, and sustainability literature is
+handled in Chapter~\ref{chap:lsesp}; OCR benchmarks without a
+downstream extraction component and closed-source commercial systems
+without published methodology are out of scope.
+
+% ------------------------------------------------------------
+\section{The template-free criterion and what it excludes}
+\label{sec:lr-templatefree}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-3-3-extraction-paradigm-tree.png}
+\caption[Taxonomy of extraction approaches.]{Taxonomy of extraction
+approaches surveyed in this chapter, organised by their answer to
+the template-free criterion.}
+\label{fig:lr-taxonomy}
+\end{figure}
+
+Prior work on structured extraction from semi-structured documents can
+be organised around a single criterion drawn from
+\S\ref{sec:bg-semistructured}: can the method process an unseen
+provider, in an unseen language, with no per-document configuration or
+training data? A method that fails this test cannot be deployed against
+the real world of European utility bills, where the next bill in the
+queue may come from a provider the system has never seen.
+
+The rule-based and 2D-grid families surveyed in
+\S\ref{sec:bg-template} fail this criterion in the same way: each
+binds extraction to a learnable layout distribution, so an unseen
+issuer breaks the prior. CloudScan~\cite{palm2017cloudscan} is the
+clearest demonstration: on 326{,}471 invoices, the authors separate
+performance on previously-seen layouts from performance on unseen
+ones and report the resulting gap, establishing cross-issuer
+generalisation as a distinct evaluation axis. Benchmark-trained
+extractors on CORD~\cite{park2019cord}-class receipts inherit the
+same problem at smaller scale. Representation learning over extraction
+candidates~\cite{majumder2020form} relaxes the layout-prior
+requirement but not the training-data requirement: a labelled
+target-schema dataset is still needed at training time.
+
+Specialised end-to-end document models fail the criterion for a
+related reason. Donut~\cite{kim2022donut},
+LayoutLMv3~\cite{huang2022layoutlmv3},
+Pix2Struct~\cite{lee2023pix2struct},
+Florence-2~\cite{xiao2024florence}, and
+InternVL~1.5~\cite{chen2024internvl} all reach their reported accuracy
+only under task-specific fine-tuning on benchmark corpora such as
+DUE~\cite{borchmann2021due} and
+DocVQA~\cite{mathew2021docvqachallenge}, which places them outside
+the template-free zero-shot regime this project evaluates. More
+fundamentally, none has a text-mode counterpart sharing its reasoning
+engine, so any cross-modality comparison using them swaps the
+architecture when it swaps the modality, confounding the two
+variables. They serve as absolute-performance reference points but
+not as the experimental vehicle for isolating input modality.
+
+Every approach surveyed above shares one pre-condition: a layout
+prior, a labelled training set in the target schema, or both. A
+multilingual utility-bill corpus with providers from four countries
+violates both pre-conditions by construction. Only general-purpose
+zero-shot LLM and VLM prompting satisfies the template-free
+criterion; which modality to feed such a model is the question the
+rest of this chapter works on.
+
+% ------------------------------------------------------------
+\section{OCR-cascade pipelines and the error-propagation ceiling}
+\label{sec:lr-ocrcascade}
+
+An OCR-cascade pipeline feeds the OCR stage's output into a downstream
+reasoner. Classical cascade work on the ICDAR 2019 SROIE
+competition~\cite{huang2021sroie} established the evaluation framing
+but tuned systems to a 1{,}000-image benchmark and did not target
+cross-issuer generalisation. LLM-based cascade work relaxes the final
+stage: Khanchandani et al.~\cite{khanchandani2026invoice} combine
+CNN-based layout analysis, OCR, and LLM entity recognition, arguing
+that an LLM reasoning stage complements the OCR layer with
+contextual semantic mapping, and Abdallah et
+al.~\cite{abdallah2024receiptsense} provide a
+multilingual Arabic--English receipt dataset with a Tesseract OCR
+baseline for LLM evaluation. Both satisfy the template-free criterion
+of \S\ref{sec:lr-templatefree} because the LLM absorbs semantic
+variation that would otherwise demand per-issuer configuration.
+
+The shared ceiling of every cascade variant is OCR quality on
+multilingual noisy input. Gupte et al.~\cite{gupte2021lightscameras}
+synthesise controlled OCR noise and show downstream NER accuracy
+drops monotonically, with a text-restoration model reducing but not
+closing the gap. Hamdi et al.~\cite{hamdi2023ocrner} report that NER
+F1 tracks character error rate closely on historical multilingual
+text, and Nazeem et al.~\cite{nazeem2024ocrlow} document material
+per-language variance across three open-source OCR engines on four
+low-resource Indian languages, relevant here because a Tesseract-based
+pipeline inherits whatever per-language accuracy profile Tesseract
+offers.
+
+Post-OCR correction with language models has been proposed as a
+mitigation. CLOCR-C~\cite{bourne2024clocrc} reports large CER
+reductions on historical OCR output; Thomas et
+al.~\cite{thomas2024postocr} compare instruction-tuned Llama~2
+against fine-tuned BART on the same task class. The constraint on
+both is semantic: an OCR stage that has confidently misread
+\texttt{177.53} as \texttt{l77.53} has produced a plausible-looking
+sequence that a correction LLM has no obvious reason to change. The
+cascade literature therefore establishes a ceiling on multilingual
+noisy input but does not establish whether that ceiling is binding
+when compared to skipping OCR entirely with the same reasoner. That
+comparison requires an OCR-free counterfactual using the same
+reasoning engine, which the cascade literature does not supply.
+
+These observations feed the Failure-Attribution and
+Multilingual-Coverage requirements in \S\ref{sec:lr-gap}.
+
+% ------------------------------------------------------------
+\section{Text-mode LLM extraction and the output-mechanism asymmetry}
+\label{sec:lr-textmode}
+
+A growing literature uses general-purpose LLMs (GPT-4 family, Claude,
+Gemini) for structured extraction from text input, typically the
+output of an OCR stage or a PDF text layer.
+ChatIE~\cite{wei2023chatie} establishes the zero-shot capability with
+a two-stage chat prompting scheme on relation triples, NER, and event
+extraction across multiple datasets and languages, showing that
+general-purpose chat LLMs perform template-free IE without
+task-specific training. Biswas and Talukdar~\cite{biswas2024rotation}
+extend the robustness picture under controlled in-plane rotation
+across three multimodal LLMs, reporting skew-dependent hallucination
+behaviour on document images.
+
+The methodological concern for any multi-provider study is how
+structured output is produced, because coverage is uneven across
+providers. Geng et al.'s JSONSchemaBench~\cite{geng2025jsonbench}
+evaluates six constrained-decoding frameworks (Guidance, Outlines,
+Llamacpp, XGrammar, OpenAI, Gemini) and reports that efficiency,
+coverage, and output quality vary meaningfully across them. OpenAI's
+Structured Outputs~\cite{openai2024structured,openai-structuredoutputs-docs}
+guarantee schema-valid JSON for supported models; Anthropic's Claude
+does not expose an equivalent guarantee and relies on
+prompt-instructed JSON with post-hoc parsing.
+
+Structural validity is orthogonal to semantic faithfulness. OpenAI's
+own documentation~\cite{openai-structuredoutputs-docs} flags that
+value-level hallucinations can persist under strict schema following,
+and ExtractBench~\cite{ferguson2026extractbench} pairs 35 PDFs with
+JSON Schemas and explicitly separates omission errors from
+hallucinations in nested-field evaluation across frontier models. A
+reported accuracy difference between two providers in a text-mode
+extraction study can therefore reflect a difference in reasoning, in
+output-mechanism reliability, or in both, and existing studies
+typically do not control for the second factor.
+
+These observations feed the Cross-Provider-Generality and
+Reproducibility requirements in \S\ref{sec:lr-gap}.
+
+% ------------------------------------------------------------
+\section{Vision-mode VLM extraction: accuracy known, trade-offs under-characterised}
+\label{sec:lr-visionmode}
+
+General-purpose VLMs accept document images directly and skip the OCR
+stage. The literature on using them for structured extraction reads
+along three axes: accuracy, cost, and the OCR-vs-vision tension
+inside the VLM itself.
+
+On accuracy, frontier VLMs are capable but uneven. Across the three
+sources cited below, GPT-4~Turbo, GPT-4V, GPT-4o, Claude~3.5 Sonnet,
+and Gemini are placed on comparable evaluation axes by Borchmann's
+reproducible API evaluation of GPT-4~Turbo and GPT-4V on DocVQA and
+InfoVQA~\cite{borchmann2024gpt4}, the InternVL~1.5
+tables~\cite{chen2024internvl}, and the MM-Vet~v2 capability
+benchmark~\cite{yu2024mmvet2}.
+On multilingual and non-Latin text the picture is weaker: Fu et
+al.'s bilingual benchmark~\cite{fu2024bilingual} reports that most
+state-of-the-art LMMs score below 50 out of 100 on text-centric
+tasks, and Shi et al.~\cite{shi2023gpt4v} find GPT-4V struggles on
+multilingual OCR and complex layouts and does not outperform
+specialised OCR overall.
+
+Cost characterisations are thinner. Vasu et al.'s
+FastVLM~\cite{vasu2024fastvlm} analyses the trade-off between image
+resolution, vision-encoder latency, visual-token count, and LLM
+inference cost, showing that document-appropriate high resolutions
+sharply increase multimodal cost unless the vision encoder is
+engineered for token efficiency. The practitioner question --- what
+does a given level of extraction accuracy cost in tokens and dollars
+at a given resolution --- is answered in parts but not end-to-end.
+
+The analytically interesting finding comes from
+DocVLM~\cite{nacson2024docvlm}, which argues that document
+understanding needs fine-grained text processing \emph{and} high
+resolution, that OCR text alone can underperform full-resolution
+vision on dense documents, and that neither modality dominates on all
+documents. On some documents the dominant information is visual
+(layout, table structure, logos); on others it is textual and the OCR
+layer already captures it. Whether utility bills fall consistently in
+one camp or vary across issuers is exactly the empirical question
+this dissertation poses.
+
+These observations feed the Operational-Instrumentation requirement
+in \S\ref{sec:lr-gap}.
+
+% ------------------------------------------------------------
+\section{Controlled comparisons of OCR-mediated vs vision-mediated extraction}
+\label{sec:lr-controlled}
+
+A small but growing literature compares OCR-cascade pipelines against
+VLM vision-mode pipelines on document extraction tasks. Four controls
+collectively define a satisfying answer to the practitioner question
+posed here:
+
+\begin{description}
+\item[(i)] The reasoning engine is held constant across modalities.
+\item[(ii)] The prompt is held constant across modalities.
+\item[(iii)] The corpus covers more than one language.
+\item[(iv)] Cost and latency are measured alongside accuracy.
+\end{description}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-3-1-studies-vs-controls-matrix.png}
+\caption[Controls coverage across surveyed studies.]{Coverage of the
+four rubric controls across surveyed cross-modality comparisons.
+No existing study meets all four; the target committed to in this
+dissertation is shown in the last row.}
+\label{fig:lr-controls-matrix}
+\end{figure}
+
+Each study below is assessed against these four controls. Individual
+studies satisfy some and not others; no study satisfies all four.
+
+\paragraph{The closest analogue.} Shen et al.'s 2026 EACL
+industry-track paper~\cite{shen2026ocrornot} is the nearest comparator
+to the present project. They benchmark out-of-the-box MLLMs on
+business-document information extraction, contrasting image-only MLLM
+pipelines with OCR-enhanced MLLM setups, and conclude that OCR may not
+be necessary for powerful MLLMs because image-only input can reach
+comparable performance. The paper satisfies controls (i) and,
+arguably, (iv) within its industry framing, but does not stratify by
+language or isolate the prompt as a strictly held variable. Its
+central finding supplies the closest available directional prediction
+for what this dissertation will measure; its controls do not answer
+the multilingual strict-isolation version of the question.
+
+\paragraph{Domain-specific comparators.} Nunes et
+al.~\cite{nunes2025tables} compare Table Transformer plus OCR against
+multimodal LLMs on PubTables-1M and report that CV+OCR is slightly
+better on structural layout while MLLMs are stronger on cell content
+--- a finding that swaps the architecture with the modality, so
+control (i) fails by design. Wang and Shen~\cite{wang2025hybrid}
+evaluate 25 OCR+LLM configurations on identity documents and report
+$F_1 = 1.0$ on structured inputs and $F_1 = 0.997$ on challenging
+images via adaptive routing, but the reasoning engine is not held
+constant and the corpus is monolingual. Berghaus et
+al.~\cite{berghaus2025multimodal} benchmark eight multimodal LLMs
+from three families on three open invoice datasets under zero-shot
+prompting, comparing direct image input against markdown-mediated
+text input, but without cost/latency instrumentation or multilingual
+stratification.
+
+\paragraph{Broad-coverage evaluation suites.} Benkirane et al.'s
+DISCO suite~\cite{benkirane2026disco} evaluates OCR pipelines and
+VLMs separately on parsing and QA across document types including
+multilingual scripts, medical forms, infographics, and multi-page
+documents. OCR pipelines remain more reliable on handwriting and
+long documents; VLMs perform better on multilingual text and
+visually rich layouts. The complexity stratification is the
+methodological strength; the limitation, for present purposes, is
+that the two paradigms are evaluated as separate systems rather than
+as competing input modalities for the same reasoning engine.
+Controls (i) and (ii) fail.
+
+\paragraph{Cost-focused comparisons.} olmOCR~\cite{poznanski2025olmocr}
+fine-tunes a 7B-parameter VLM on a 260{,}000-page corpus and reports
+comparison against GPT-4o, Gemini Flash, and Qwen-2.5-VL, with
+explicit per-million-page pricing (approximately \$176 for olmOCR
+against approximately \$6{,}240 for GPT-4o batch pricing on their
+documents). The cost characterisation is the strongest available;
+control (i) does not apply because the comparison is
+cross-architecture by design.
+
+\paragraph{Vendor benchmarks.} The Unstructured SCORE-Bench
+results~\cite{unstructured2025scorebench} place certain VLM
+configurations ahead of OCR configurations on the same parser, but
+the reasoning engine is not held constant across rows and the
+rankings are produced and maintained by the vendor.
+
+\paragraph{Summary.} Shen et al. and DISCO ask the general question
+at high abstraction and stop short of strict single-variable
+isolation; the rest answer narrower questions (tables, identity
+documents, invoices, cost-per-page, parsing fidelity) without holding
+the reasoning engine constant. The gap is not that no one has
+compared OCR and vision extraction; it is that no study
+simultaneously (i) holds the reasoning engine and prompt absolutely
+constant, (ii) uses a multilingual corpus from the genuinely
+out-of-distribution population of European utility bills, (iii)
+reports cost and latency as first-class metrics, and (iv) varies the
+LLM provider factorially so the modality finding can be tested for
+provider specificity.
+
+% ------------------------------------------------------------
+\section{Evaluation methodology for structured extraction}
+\label{sec:lr-eval}
+
+Even a well-controlled comparison produces uninterpretable results if
+the evaluation metrics conflate distinct failure modes. This section
+reviews how the extraction literature measures success against one
+criterion: does the methodology distinguish semantically equivalent
+predictions from genuine failures, and correct-absence from both
+omission and hallucination?
+
+MUC-7~\cite{chinchor1998muc7} supplies the foundational vocabulary:
+each predicted slot is tallied as correct, incorrect, missing (MIS),
+or spurious (SPU), with precision, recall, and F derived from these
+counts, so under-generation and over-generation are explicitly
+distinguished. Much of the field has the vocabulary available but
+does not fully apply it. DocVQA's ANLS metric~\cite{mathew2021docvqa}
+allows partial credit through string similarity but conflates
+correct-absence with missing answers. FUNSD~\cite{jaume2019funsd}
+reports entity-level precision and recall without a null taxonomy,
+and DUE~\cite{borchmann2021due} aggregates per-task metrics so null
+handling varies accordingly.
+
+LMDX~\cite{perot2024lmdx} introduces a grounding-based evaluation in
+which each predicted entity is tied to a source span and unverifiable
+entities are discarded as hallucinations, but it does not standardise
+how absent ground-truth fields are scored.
+ExtractBench~\cite{ferguson2026extractbench} addresses the issue head
+on: 35 PDFs paired with JSON schemas and gold labels, with omission
+errors and hallucinations reported as separate categories in
+nested-field evaluation across frontier models. It provides the
+peer-reviewed language for the distinction this dissertation's
+evaluation framework implements.
+
+Cross-field reading from outside the extraction literature helps.
+Dale et al.'s machine-translation hallucination
+study~\cite{dale2023hallucination} defines hallucinations as
+translations containing information unrelated to the source and
+omissions as translations dropping source information. The two
+concepts map cleanly onto structured extraction: a predicted field
+that does not exist on the document is a hallucination; a field on
+the document that the prediction omits is an omission.
+
+Reproducibility sits alongside. Pineau et
+al.~\cite{pineau2021reproducibility} describe the NeurIPS
+reproducibility programme, which has since become standard for
+evaluation reporting; most of the extraction literature reviewed in
+this chapter does not meet the checklist in full, with config,
+prompt, and per-document artefacts rarely archived.
+
+These observations feed the Null-Aware Evaluation,
+Failure-Attribution, and Reproducibility requirements in
+\S\ref{sec:lr-gap}.
+
+% ------------------------------------------------------------
+\section{Research gap and bridge to specification and design}
+\label{sec:lr-gap}
+
+Across the three literatures examined --- OCR-cascade structured
+extraction, text-mode LLM extraction, and cross-modality comparison
+--- no published study simultaneously isolates the reasoning engine,
+varies the LLM provider factorially, reports per-stage cost and
+latency, and applies a null-aware evaluation taxonomy on a
+multilingual out-of-distribution document class. This synthesis
+insight is stated by no single paper cited above; it is the product
+of reading the three literatures against one another and against the
+four-point rubric of \S\ref{sec:lr-controlled}.
+
+Based on the limitations identified in
+Sections~\ref{sec:lr-ocrcascade} (OCR error propagation on
+multilingual input), \ref{sec:lr-textmode} (output-mechanism
+asymmetry across providers), \ref{sec:lr-controlled} (the four-point
+rubric that existing comparisons fail), and \ref{sec:lr-eval}
+(null-handling and failure-attribution gaps in standard evaluation),
+this dissertation commits to seven experimental requirement classes
+that collectively close the gap:
+\textit{Modality-Isolation}, \textit{Multilingual-Coverage},
+\textit{Operational-Instrumentation}, \textit{Reproducibility},
+\textit{Failure-Attribution}, \textit{Null-Aware Evaluation}, and
+\textit{Cross-Provider Generality}. Each class is formally stated,
+given a unique identifier (ER1--ER7), and traced back to the
+specific subsection of this chapter that motivates it in
+Chapter~\ref{chap:spec}~\S\ref{sec:spec-experimental-requirements};
+the architectural realisation of each, together with the
+alternatives considered and rejected, is documented in
+Chapter~\ref{chap:design}. Figure~\ref{fig:lr-gap-map}
+visualises the traceability explicitly.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-3-2-gap-to-requirements-map.png}
+\caption[Gap-to-requirement traceability map.]{Traceability from
+literature gaps to the seven experimental requirement classes
+formalised in Chapter~\ref{chap:spec}.}
+\label{fig:lr-gap-map}
+\end{figure}
+
+Research questions RQ1--RQ3
+(\S\ref{sec:intro-rqs}) operationalise the gap identified here and
+are restated, paired with directional hypotheses, in
+Chapter~\ref{chap:spec}~\S\ref{sec:spec-objectives}.

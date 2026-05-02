@@ -1,0 +1,260 @@
+% ============================================================
+%  Chapter 2: Background
+%  Meant to be included from main.tex via \input{background}.
+%  Do NOT add \documentclass or \begin{document} here.
+%  Assumes IEEEtran bibliography style and biblatex-or-bibtex
+%  configured in main.tex.
+% ============================================================
+
+\chapter{Background}
+\label{chap:background}
+
+This chapter defines the structured-extraction concepts the rest of
+the dissertation relies on; critical comparison of competing
+approaches is deferred to Chapter~\ref{chap:litreview} and the
+evaluation metrics used to score extractions are defined in the
+Evaluation chapter where they are applied.
+
+% ------------------------------------------------------------
+\section{Document intelligence and structured data extraction}
+\label{sec:bg-docintel}
+
+Document intelligence converts human-readable documents into
+machine-readable representations. A typical pipeline takes a rendered
+page (a scan, a photograph, or a native PDF) and produces structured
+records bound to a schema: named entities, typed fields, tables, or
+key-value pairs~\cite{cui2021documentai}. The core difficulty is that
+entity vocabularies and page structures vary across domains and
+languages~\cite{silva2021review}.
+
+Two benchmarks recur throughout this dissertation.
+CORD~\cite{park2019cord} is a consolidated receipt dataset with
+per-box text and multi-level semantic labels.
+DocVQA~\cite{mathew2021docvqa} reframes document understanding as
+visual question answering over document images. Both measure success
+by how well the produced record matches a reference one, not by
+full-page transcription fidelity.
+
+% ------------------------------------------------------------
+\section{Semi-structured documents and utility bills}
+\label{sec:bg-semistructured}
+
+Documents are informally divided into three classes. Unstructured
+documents (narrative prose, articles) have no reliable positional
+convention. Structured documents (relational database exports, filled
+digital forms with named fields) carry their schema explicitly.
+Semi-structured documents sit between the two: the same set of fields
+recurs across instances, but layout, font, language, and ordering
+change from one issuer to the next~\cite{abiteboul1997querying}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\linewidth]{Chapters/figures/fig-2-1-document-class-spectrum.png}
+\caption[Document class spectrum.]{The three-class document spectrum.
+Utility bills sit in the semi-structured middle: the schema is
+stable, the surface layout varies by issuer.}
+\label{fig:bg-doc-spectrum}
+\end{figure}
+
+Receipts and invoices are the canonical examples.
+CloudScan~\cite{palm2017cloudscan} established cross-issuer
+generalisation as a distinct evaluation axis for invoice field
+extraction, separating performance on previously-seen layouts from
+performance on unseen ones. ReceiptSense~\cite{abdallah2024receiptsense}
+shows that the same class of document exhibits multilingual surface
+variation at scale, motivating the multilingual design of the corpus
+used here.
+
+Utility bills belong to the same family. Every issuer prints broadly
+the same information (account holder, billing period, consumption,
+amount due, due date) because these fields are mandated by sector
+regulation; Article~18 of the EU electricity market directive binds
+customer bills to the minimum content requirements set out in Annex~I
+of that directive~\cite{eu2019electricity}. Despite this common core,
+there is no cross-issuer standard for where on the page any of it
+appears, what label is used, what currency or language the bill is in,
+or what typographic conventions govern totals and subtotals. The
+schema is fixed and small enough to define crisply; the surface
+variation is wide.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\linewidth]{Chapters/figures/fig-2-2-utility-bill-layouts.png}
+\caption[Same schema, different surfaces.]{The same five schema
+fields appear at different positions, under different labels, and
+in different languages across three mock issuers. The schema is
+fixed; the surface varies.}
+\label{fig:bg-bill-layouts}
+\end{figure}
+
+% ------------------------------------------------------------
+\section{The template-based extraction paradigm}
+\label{sec:bg-template}
+
+Before the current generation of learned models, structured extraction
+from semi-structured documents was approached by binding rules to page
+regions. Klink and Kieninger~\cite{klink2001rule} proposed a hybrid
+system in which geometrical layout features and textual cues combine
+through fuzzy-matched rules, with domain-specific sets layered on top
+of domain-independent routines. The deployment pattern that grew out
+of this work is what the document-analysis literature calls a
+\emph{template}~\cite{schuster2013intellix,esser2014fewexemplar}: a
+hand-written or semi-automatically induced rule set keyed to a
+specific issuer's layout, to be re-authored whenever the layout
+changes.
+
+A second wave of template-style methods replaced explicit rules with
+2D-grid neural representations. Chargrid~\cite{katti2018chargrid}
+encodes a document as a 2D grid of one-hot character vectors aligned
+with page coordinates and passes the grid through a fully convolutional
+encoder-decoder to predict segmentation masks and bounding boxes for
+target fields. BERTgrid~\cite{denk2019bertgrid} extends this by
+replacing the character encoding with contextualised BERT word-piece
+embeddings, so the spatial representation carries language semantics.
+Both are trained per field schema. Majumder et
+al.~\cite{majumder2020form} extend the family with representation
+learning over extraction candidates rather than whole-page layout.
+
+% ------------------------------------------------------------
+\section{Optical character recognition}
+\label{sec:bg-ocr}
+
+Optical character recognition (OCR) converts an image of text into a
+machine-readable character sequence, typically with bounding boxes.
+Modern engines combine a text-detection stage (where on the page is
+there text) with a text-recognition stage (what does it say), an
+architecture Long et al.~\cite{long2021scenetext} identify as dominant
+across the deep-learning era. Tesseract~\cite{smith2007tesseract} is
+the reference open-source engine; its 2007 overview describes line
+finding, feature-based classification, and an adaptive classifier. It
+is the default OCR stage in academic pipelines that need local
+execution, multilingual language-pack support, and zero per-document
+cost.
+
+Two properties of OCR matter for downstream extraction. Errors are
+not uniformly distributed: they concentrate on historical and degraded
+print and on multilingual text whose vocabulary drifts from the
+dictionaries used for correction, as catalogued in the post-OCR
+processing survey of Nguyen et al.~\cite{nguyen2021postocr}.
+Lopresti~\cite{lopresti2009ocrerrors} traces how OCR noise cascades
+through sentence-boundary detection, tokenisation, and part-of-speech
+tagging: an early error can disable every subsequent stage that
+depends on clean tokens. Any pipeline that places an OCR stage before
+a reasoning stage inherits the OCR stage's error profile.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\linewidth]{Chapters/figures/fig-2-3-ocr-error-cascade.png}
+\caption[OCR error cascade.]{OCR errors propagate: a single
+recognition mistake at stage 1 disables every subsequent stage that
+depends on clean tokens.}
+\label{fig:bg-ocr-cascade}
+\end{figure}
+
+% ------------------------------------------------------------
+\section{Large language models for information extraction}
+\label{sec:bg-llms}
+
+A large language model (LLM) is an autoregressive neural network
+trained to predict the next token on a large text
+corpus~\cite{zhao2023llm}, built on the Transformer of Vaswani et
+al.~\cite{vaswani2017attention} which replaced recurrence with
+self-attention and enabled parallel training at previously
+impractical scales. Brown et al.~\cite{brown2020gpt3} showed that at
+sufficient scale these models perform many tasks from a few in-prompt
+examples without gradient updates; Ouyang et
+al.~\cite{ouyang2022instructgpt} then demonstrated that instruction
+tuning with human feedback aligns model outputs with natural-language
+task descriptions. The latter capability is what this dissertation
+relies on when it specifies extraction behaviour through a prompt
+rather than through training.
+
+Applied to information extraction, an LLM reads an input (typically
+text, possibly the output of an OCR engine) and emits a structured
+record. The naive realisation is to prompt for JSON and parse the
+result, which fails when the model emits syntactically invalid JSON,
+a field name outside the schema, or a value of the wrong type. Two
+mechanisms address the reliability problem. Constrained decoding
+intervenes at generation time by masking any token that would violate
+the target grammar; Willard and Louf~\cite{willard2023guided}
+formalise this as finite-state machine transitions over the
+vocabulary, with regular expressions and context-free grammars
+compiled into the mask. Schema-enforced provider APIs expose an
+equivalent mechanism at the service level. OpenAI's Structured
+Outputs~\cite{openai2024structured} accept a JSON Schema and constrain
+the decoder so that any returned string parses against the schema,
+with 100\,\% schema adherence reported for
+\texttt{gpt-4o-2024-08-06} under Structured Outputs, against under
+40\,\% for \texttt{gpt-4-0613} without it.
+
+One failure mode generalises across text- and vision-mode extraction.
+\emph{Hallucination} is the production of a plausible-looking output
+value that is not supported by the input; Ji et
+al.~\cite{ji2023hallucination} survey it across generative NLP tasks
+as a systematic rather than occasional failure. In document
+extraction, hallucination appears as a value that fits the field's
+type and looks appropriate for the document class but does not occur
+in the source.
+
+For the rest of this dissertation, an LLM extractor means a model
+that reads tokens and produces a record conforming to a supplied
+schema. Whether the input tokens come from an OCR engine or from
+native text is the separate design decision treated in
+Chapter~\ref{chap:litreview}.
+
+% ------------------------------------------------------------
+\section{Vision-language models and multimodal input}
+\label{sec:bg-vlms}
+
+A vision-language model (VLM) is an LLM extended to accept image
+input alongside text. Most VLMs connect a vision encoder to a
+language model through a learned projection and are then
+instruction-tuned on multimodal data. Yin et al.~\cite{yin2024mllm}
+survey this ``vision encoder + projection + LLM'' pattern as the
+dominant design.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\linewidth]{Chapters/figures/fig-2-4-vlm-architecture.png}
+\caption[VLM architecture.]{The dominant VLM pattern: a vision
+encoder, a projection layer, and a language decoder, accepting
+images alongside text.}
+\label{fig:bg-vlm-arch}
+\end{figure}
+
+Two families of VLM are relevant. The first is the
+\emph{general-purpose} frontier models, which accept arbitrary images
+alongside text prompts, were not trained specifically for documents,
+and are reached through provider APIs rather than self-hosted. The
+two evaluated in this dissertation are OpenAI's
+GPT-4o~\cite{openai2024gpt4o} and Anthropic's
+Claude~\cite{anthropic2024claude}. The second is the
+\emph{specialised} document models trained end-to-end on document
+images. Donut~\cite{kim2022donut} is the prototypical example: it
+eliminates the external OCR stage entirely, mapping a document image
+to a structured output sequence via a transformer encoder-decoder
+pretrained with a synthetic document generator for language and
+domain coverage. LayoutLMv3~\cite{huang2022layoutlmv3} pretrains a
+multimodal transformer with unified text and image masking plus a
+word-patch alignment objective, reporting state-of-the-art results on
+form understanding, receipt understanding, document VQA, document
+classification, and layout analysis.
+
+The VLM-specific form of the hallucination problem introduced in
+\S\ref{sec:bg-llms} is known in the vision literature as \emph{object
+hallucination}: the production of output describing entities not
+present in the input image. Li et al.~\cite{li2023pope} find it
+widespread across representative VLMs. Vision-mode extraction
+therefore avoids the OCR error cascade of \S\ref{sec:bg-ocr} but
+admits a visual variant of the hallucination risk defined in
+\S\ref{sec:bg-llms}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-2-5-two-path-pipeline.png}
+\caption[Two extraction pipelines compared in this dissertation.]{The
+two extraction pipelines this dissertation compares. Both share the
+rasteriser, the LLM, and the output schema. The only variable is
+how pixels become model input.}
+\label{fig:bg-two-path}
+\end{figure}

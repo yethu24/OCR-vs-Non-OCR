@@ -1,0 +1,424 @@
+% ============================================================
+%  Chapter 4: Objectives, requirements and specification
+%  Included from main.tex via \input{Chapters/Specification}.
+%  Do NOT add \documentclass or \begin{document} here.
+%  Follows Chapter 3 (Literature Review); precedes Chapter 5 (Design).
+%  Scope: what the project aims to learn (objectives, RQs, hypotheses)
+%  and what the system must satisfy (FR, NFR, ER, experimental
+%  specification, schema, evaluation). Architecture and alternatives
+%  considered belong to Chapter~\ref{chap:design}.
+% ============================================================
+
+\chapter{Objectives, requirements and specification}
+\label{chap:spec}
+
+This chapter fixes what the project aims to learn and what the
+system must satisfy for that learning to count as evidence. Research
+objectives and hypotheses are in \S\ref{sec:spec-objectives}, scope
+in \S\ref{sec:spec-scope}, requirements in
+\S\S\ref{sec:spec-fr}--\ref{sec:spec-experimental-requirements},
+experimental specification in \S\ref{sec:spec-experimental}, the
+schema in \S\ref{sec:spec-schema}, and evaluation criteria in
+\S\ref{sec:spec-evaluation}. Every requirement traces back to a
+subsection of Chapter~\ref{chap:litreview}; how each is realised
+architecturally is deferred to Chapter~\ref{chap:design}. This
+chapter states \textit{what} and \textit{why}; the next states
+\textit{how} and \textit{what was rejected}.
+
+% ------------------------------------------------------------
+\section{Research objectives and hypotheses}
+\label{sec:spec-objectives}
+
+Three research questions follow from the gap in
+\S\ref{sec:lr-gap}. Each is paired with a directional hypothesis
+fixed before the run, so a null result stays informative against a
+pre-registered position.
+
+\paragraph{RQ1 --- Modality effect.} Does explicit OCR preprocessing
+improve or degrade structured-extraction accuracy compared to
+direct vision-mediated extraction by the same LLM, on multilingual,
+out-of-distribution utility bills?
+
+\textit{Hypothesis H1.} Vision-mediated extraction will match or
+exceed OCR-mediated extraction in aggregate accuracy, with the gap
+widening on non-Latin-script and low-frequency layouts, because the
+OCR error-propagation ceiling identified by
+Lopresti~\cite{lopresti2009ocrerrors} and Nguyen et
+al.~\cite{nguyen2021postocr} binds on multilingual input and is not
+shared by the vision path.
+
+\paragraph{RQ2 --- Operational trade-off.} How do the OCR-mediated
+and vision-mediated pipelines compare on per-document monetary
+cost, wall-clock latency, and operational complexity?
+
+\textit{Hypothesis H2.} Vision-mediated extraction will cost more
+per document in API tokens while eliminating Tesseract language-pack
+management, producing a cost-complexity trade-off rather than a
+single-winner ranking, consistent with the operational-cost
+observations in FastVLM~\cite{vasu2024fastvlm} and
+DocVLM~\cite{nacson2024docvlm}.
+
+\paragraph{RQ3 --- Cross-provider generality.} Does the modality
+effect observed under RQ1 generalise across LLM providers from
+different architectural families, or is it provider-specific?
+
+\textit{Hypothesis H3.} The OCR-vs-vision gap will vary by provider
+because structured-output support, vision-encoder resolution, and
+multilingual OCR capability differ between
+OpenAI~\cite{openai2024gpt4o,openai2024structured} and
+Anthropic~\cite{anthropic2024claude} models. A provider-independent
+gap would falsify H3.
+
+% ------------------------------------------------------------
+\section{Scope, terminology and success framing}
+\label{sec:spec-scope}
+
+\paragraph{In scope.} Template-free structured extraction from
+multilingual, born-digital and scanned utility bills. Two
+general-purpose LLM providers held constant across modalities.
+Zero-shot prompting with temperature~$0.0$. Full-document accuracy,
+cost, and latency under the null-aware evaluation of
+\S\ref{sec:spec-evaluation}. Per-stage attribution of OCR-mediated
+failures to OCR text or LLM reasoning.
+
+\paragraph{Out of scope.} Specialised document architectures
+(Donut~\cite{kim2022donut}, LayoutLMv3~\cite{huang2022layoutlmv3});
+fine-tuning; few-shot prompting; image preprocessing beyond
+rasterisation; asynchronous or batched submission; confidence
+calibration; significance testing on slice accuracy (sample size
+does not support it reliably). A specialised architecture, a
+fine-tuning step, or a preprocessing transform would turn the
+comparison into a cross-architecture or cross-training study rather
+than the single-variable modality test the gap demands. These are
+acknowledged as limitations in Chapter~\ref{chap:evaluation}.
+
+\paragraph{Canonical terminology.} The literature uses several names
+for each pipeline. For the rest of this report:
+
+\begin{itemize}
+\item \textbf{OCR-mediated pipeline}: document image through
+Tesseract~\cite{smith2007tesseract}, then the text to the LLM in
+text mode. Equivalent to ``OCR-cascade'' and ``text-mode''.
+\item \textbf{Vision-mediated pipeline}: document image sent
+directly to the LLM in vision mode. Equivalent to ``OCR-free'' and
+``vision-mode''.
+\item \textbf{Reasoning engine}: the LLM held constant across the
+two pipelines within a condition.
+\item \textbf{Condition}: a unique (\textit{provider},
+\textit{modality}) pair; four exist in the $2\times 2$ factorial,
+labelled C1--C4.
+\end{itemize}
+
+\paragraph{Success framing.} The project is not chasing a single
+leaderboard number. For each RQ, success means a metric collected
+under pre-specified conditions, a directional hypothesis fixed
+before collection, and a mechanism-level attribution for the sign
+of the result. A null finding that is attributable to a named
+mechanism (OCR propagation, vision hallucination, output-format
+asymmetry, provider-specific encoder limitations) is a successful
+outcome; an uninterpretable headline number is not.
+
+% ------------------------------------------------------------
+\section{Functional requirements}
+\label{sec:spec-fr}
+
+Functional requirements state what the system must do. Each is
+verifiable against a run artefact, an automated test, or an
+evaluation metric. Priority uses a two-level MoSCoW reduction:
+\textit{Must} requirements are those whose violation invalidates
+the experiment; \textit{Should} requirements improve operational
+usability without affecting validity.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-4-2-fr-table.png}
+\caption[Functional requirements catalogue.]{Functional
+requirements catalogue. Each requirement names both its
+verification artefact and its automated test.}
+\label{fig:fr}
+\end{figure}
+
+Figure~\ref{fig:fr} fixes visible behaviour, not internal structure;
+how ingestion, pipelines, and evaluation are organised inside the
+system is covered in Chapter~\ref{chap:design}.
+
+% ------------------------------------------------------------
+\section{Non-functional requirements}
+\label{sec:spec-nfr}
+
+Non-functional requirements state properties the system must exhibit
+irrespective of any one extraction. They guard experimental validity
+against engineering failure modes documented in the literature:
+irreproducibility, output-mechanism asymmetry, silent configuration
+drift, and runaway
+cost~\cite{pineau2021reproducibility,openai2024structured}. A system
+can satisfy an FR while violating an NFR; such a system produces
+extractions but not an experiment.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-4-3-nfr-table.png}
+\caption[Non-functional requirements catalogue.]{Non-functional
+requirements catalogue. All eight are priority \textit{Must}.}
+\label{fig:nfr}
+\end{figure}
+
+NFR1--NFR8 are all \textit{Must}; each one is a precondition for a
+finding to be defensible under cold-reading scrutiny.
+
+% ------------------------------------------------------------
+\section{Experimental requirements}
+\label{sec:spec-experimental-requirements}
+
+Experimental requirements are the seven classes derived from the
+rubric of \S\ref{sec:lr-controlled} and the null-handling analysis
+of \S\ref{sec:lr-eval}. They differ from FRs and NFRs in being
+properties of the \textit{experiment}: a system can be functionally
+perfect and still fail ER1, for example by feeding the two
+modalities different post-processing, and so invalidate the
+comparison.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-4-4-er-table.png}
+\caption[Experimental requirements.]{Experimental requirements,
+each traced to the literature-review subsection that motivates it.}
+\label{fig:er}
+\end{figure}
+
+Figure~\ref{fig:er} closes the traceability chain \textit{lit-review
+subsection $\to$ ER $\to$ design decision $\to$ test $\to$ evaluation
+revisit}. ER1--ER7 are all \textit{Must}; any violation invalidates
+the study against the rubric this report has committed to.
+
+% ------------------------------------------------------------
+\section{Experimental specification}
+\label{sec:spec-experimental}
+
+The experiment is a $2\times 2$ factorial over input modality
+(OCR-mediated, vision-mediated) and LLM provider (OpenAI,
+Anthropic). The four conditions are labelled C1--C4.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.78\linewidth]{Chapters/figures/fig-4-1-factorial-matrix.png}
+\caption[$2\times 2$ factorial matrix.]{The four conditions under
+which the system is run. Rows: LLM provider. Columns: input
+modality. Each cell is a complete pipeline run over the full
+multilingual utility-bill dataset.}
+\label{fig:factorial}
+\end{figure}
+
+Within a column, modality is fixed and the reasoning engine changes
+(RQ3). Within a row, the reasoning engine is fixed and modality
+changes (RQ1). All four cells are used jointly for RQ2.
+
+Each RQ is pre-specified below: metric, baselines, hypothesis,
+controls, and success criterion fixed before any run, so the
+evaluation chapter only reports whether each condition met or
+missed those criteria.
+
+\paragraph{RQ1 pre-specification.} \textit{Metric:} overall,
+document-level, and per-field accuracy
+(\S\ref{sec:spec-evaluation}), independently for C1--C4.
+\textit{Baselines:} a null-prediction baseline returning
+\texttt{null} for every field, to establish the floor implied by
+the both-null rule; each condition paired against its within-provider
+counterpart (C1 vs.~C2, C3 vs.~C4); Shen et al.'s directional prior
+that image-only MLLM input can reach parity with OCR-enhanced
+setups~\cite{shen2026ocrornot}. \textit{Hypothesis:} H1.
+\textit{Controls:} ER1, plus shared schema, normalisation, and
+evaluation code. \textit{Success:} the within-provider modality gap
+is measurable at field-level granularity and its sign is
+attributable via ER5 to a named mechanism (OCR propagation, vision
+hallucination, output-format reliability) rather than asserted.
+
+\paragraph{RQ2 pre-specification.} \textit{Metric:} mean per-document
+latency with the per-stage breakdown of NFR7, mean per-document
+token count, and mean per-document dollar cost, each for C1--C4.
+\textit{Baselines:} Tesseract-only latency as the OCR-mediated stage
+ceiling; first-two-page vision-mediated cost as a controlled upper
+bound on image-token input;
+FastVLM~\cite{vasu2024fastvlm} throughput figures as external
+reference. \textit{Hypothesis:} H2. \textit{Controls:} ER1 and
+identical document set; identical run ordering where API rate limits
+permit. \textit{Success:} cost, latency, and operational complexity
+are reported as three separable quantities, with no single-winner
+collapse without direct quantitative support.
+
+\paragraph{RQ3 pre-specification.} \textit{Metric:} the
+within-provider modality gap for each provider, and the difference
+between those gaps with its sign. \textit{Baselines:} both providers
+on the same dataset, prompt, normalisation, and evaluation harness,
+so provider is the only uncontrolled variable across rows.
+\textit{Hypothesis:} H3. \textit{Controls:} ER1, ER2, ER6.
+\textit{Success:} a provider-specificity claim is accepted only
+when the sign or magnitude of the modality gap matches a named
+mechanism, for example native constrained
+decoding~\cite{openai2024structured} versus prompt-instructed JSON,
+or vision-encoder resolution for low-frequency layouts; otherwise
+the null is reported.
+
+\paragraph{Slicing.} Accuracy metrics are reported in aggregate and
+sliced by \texttt{language} and \texttt{utility\_type}. Slice
+accuracies are descriptive given the corpus size; formal
+significance testing is deferred (out-of-scope list,
+\S\ref{sec:spec-scope}).
+
+% ------------------------------------------------------------
+\section{Canonical data schema}
+\label{sec:spec-schema}
+
+The extraction target is a 12-field canonical schema
+(Figure~\ref{fig:schema}). Fixing the schema is what makes FR5--FR7
+objective: an unbounded key-value target has no ground truth against
+which hallucination, omission, or value mismatch can be defined, and
+the null-aware evaluation (\S\ref{sec:spec-evaluation}) relies on
+the closed-world assumption that ``not in the schema'' is not a
+valid prediction. All 12 fields are nullable; a given bill may
+omit any of them.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{Chapters/figures/fig-4-5-schema-table.png}
+\caption[\texttt{BillExtraction} schema.]{The canonical
+\texttt{BillExtraction} schema. All fields are nullable; types are
+enforced by Pydantic at parse time.}
+\label{fig:schema}
+\end{figure}
+
+The 12 fields are the intersection of the minimum-content
+requirements mandated for electricity bills by Article~18 of the EU
+electricity directive~\cite{eu2019electricity} and the stable core
+fields ReceiptSense~\cite{abdallah2024receiptsense} observes across
+multilingual receipts. Provider-specific fields outside that core
+(per-tariff itemisation, previous-balance reconciliation) are
+excluded to keep the comparison constant across issuers whose
+layouts differ substantially in those areas.
+
+\paragraph{Normalisation.} Provider-name legal-suffix stripping
+(\textit{Ltd}, \textit{GmbH}, \textit{S.p.A.}); EU- and US-style
+decimal-separator parsing; ISO~8601 canonicalisation of dates from
+locale-specific surface forms; multilingual currency and
+consumption-unit synonym mapping (Italian ``SMC'' maps to m$^3$).
+Full rules are in Appendix~B.
+
+\paragraph{Ground-truth format.} Ground truth is stored per document
+as JSON:
+
+\begin{verbatim}
+{
+  "document_id": "<unique key>",
+  "annotated_by": "<annotator>",
+  "annotation_date": "<ISO 8601>",
+  "fields": {
+    "provider_name": "<value or null>",
+    ...
+  }
+}
+\end{verbatim}
+
+Fields absent from the bill are set to \texttt{null} explicitly,
+distinguishing ``absent'' from ``unannotated''. The four-class null
+taxonomy (\S\ref{sec:spec-evaluation}) depends on this being decided
+at annotation time rather than inferred from missing keys.
+
+% ------------------------------------------------------------
+\section{Evaluation criteria}
+\label{sec:spec-evaluation}
+
+Criteria are fixed here so Chapter~\ref{chap:evaluation} reports
+against a target chosen before the data is seen. Executable decision
+flows for null classification and failure diagnosis are deferred to
+Chapter~\ref{chap:design} \S\ref{sec:design-evalframework}.
+
+\paragraph{Field-level accuracy.} For each field~$f$, let $C_f$,
+$I_f$, $H_f$, $O_f$, $B_f$ be the counts across all documents of
+correct, incorrect, hallucinated, omitted, and both-null predictions.
+Field accuracy is
+\(A_f = C_f / (C_f + I_f + H_f + O_f)\). The both-null count $B_f$ is
+excluded from the denominator because including it would inflate
+accuracy by rewarding legitimate absences, an effect flagged by
+Chinchor's MUC-7 response-key vocabulary~\cite{chinchor1998muc7}
+and by ExtractBench~\cite{ferguson2026extractbench}.
+
+\paragraph{Document-level accuracy.} The fraction of documents with
+zero incorrect, hallucinated, or omitted fields across all 12
+targets. A single wrong field invalidates the extraction for
+downstream bookkeeping, so this is the most production-relevant
+measure.
+
+\paragraph{Overall accuracy.} Field-level counts aggregated across
+all 12 fields and all documents under the same both-null-excluded
+denominator.
+
+\paragraph{Four-class null taxonomy.} Every field comparison falls
+into one of the five cells of Figure~\ref{fig:null-taxonomy}. The
+distinction between hallucination and omission follows Dale et
+al.~\cite{dale2023hallucination} and is required by ER6.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.85\linewidth]{Chapters/figures/fig-4-6-null-taxonomy.png}
+\caption[Null-aware taxonomy.]{The null-aware evaluation taxonomy
+applied to every field comparison.}
+\label{fig:null-taxonomy}
+\end{figure}
+
+\paragraph{Comparison rules.} Floats (\texttt{total\_amount\_due},
+\texttt{consumption\_amount}) compare with absolute tolerance
+$\pm 0.01$ after normalisation. Dates compare by exact string
+equality on the ISO~8601 canonical form. Strings compare on the
+normalised surface form (NFC Unicode, lowercase,
+whitespace-collapsed); Levenshtein similarity is computed for
+diagnosis but does not contribute to accuracy.
+
+\paragraph{Failure attribution, OCR-mediated (ER5).} For each
+non-correct field: if the ground-truth value occurs as a
+case-insensitive substring of the stored OCR text, the failure is
+attributed to the LLM (the signal was available and it misread it);
+otherwise the failure is attributed to Tesseract (the signal was
+lost before the LLM saw it). The heuristic has known false-positive
+and false-negative modes, especially for dates where the same digits
+recur in unrelated contexts; its limitations are discussed in
+Chapter~\ref{chap:design}. The heuristic supplies an automated,
+reproducible, first-order attribution that the OCR-cascade
+literature (\S\ref{sec:lr-ocrcascade}) does not.
+
+\paragraph{Failure attribution, vision-mediated.} All non-correct
+fields are attributed to the vision-mediated model without finer
+granularity, because no intermediate artefact analogous to OCR text
+exists. The asymmetry between the two conditions is itself a finding
+of the study; Chapter~\ref{chap:evaluation} discusses it rather than
+papering over it with a weaker heuristic.
+
+\paragraph{Chart set (FR8).} Six canonical figures are produced by
+the reporting stage: (1) overall-accuracy bar chart across
+conditions; (2) per-field-accuracy heatmap; (3) per-stage timing
+stacked bar chart; (4) cost-per-document bar chart;
+(5) accuracy-by-language grouped bar chart; (6)
+accuracy-by-\texttt{utility\_type} grouped bar chart. Each supports
+one or more of RQ1--RQ3; the chart-to-RQ mapping is given in
+Chapter~\ref{chap:design}.
+
+% ------------------------------------------------------------
+\section{Summary and forward bridge}
+\label{sec:spec-bridge}
+
+This chapter has fixed RQ1--RQ3 and their directional hypotheses,
+scope and terminology, FR1--FR10, NFR1--NFR8, and ER1--ER7 with
+upstream traceability to Chapter~\ref{chap:litreview}, the $2\times 2$
+experimental matrix and per-RQ success criteria, the 12-field
+schema, and the null-aware evaluation metrics and failure-attribution
+protocol.
+
+Chapter~\ref{chap:design} takes this specification as input. It
+states the architectural style chosen to satisfy FR1--FR10 under
+NFR1--NFR8 and ER1--ER7, names the ten design decisions that
+realise those requirements, identifies the alternative considered
+for each, and gives the technical reason each alternative was
+rejected. The evaluation framework specified declaratively here is
+given its decision-tree realisation in
+Chapter~\ref{chap:design}~\S\ref{sec:design-evalframework}.
+Chapter~\ref{chap:evaluation} closes the chain by revisiting every
+requirement against the run evidence.

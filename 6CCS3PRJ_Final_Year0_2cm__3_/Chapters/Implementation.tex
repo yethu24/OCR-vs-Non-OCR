@@ -1,0 +1,555 @@
+% ============================================================
+%  Chapter 6: Implementation
+%  Included from report.tex via \include{Chapters/Implementation}.
+%  Figures fig-6-1 .. fig-6-14 are user screenshots; each is wrapped
+%  in \IfFileExists so the document compiles before PNGs are added.
+% ============================================================
+
+\chapter{Implementation}
+\label{chap:impl}
+
+% Helper: show image if present, else visible placeholder box.
+\newcommand{\implscreenshot}[2]{%
+  \IfFileExists{#1}{%
+    \includegraphics[width=\linewidth,keepaspectratio]{#1}}{%
+    \fbox{\begin{minipage}{0.96\linewidth}\centering\footnotesize
+    \texttt{#1}\\[0.35em]#2\end{minipage}}}}
+
+% Pointer to future appendix material (B.x or C.x). Replace macro body
+% when appendices are written so all chapter pointers update together.
+\newcommand{\apxref}[1]{\textit{(see Appendix~#1 when added.)}}
+
+% ------------------------------------------------------------
+\section{From design to implementation}
+\label{sec:impl-bridge}
+
+Chapter~\ref{chap:design} fixed what must be built and why each
+major choice beat its alternative (Figure~\ref{fig:design-decisions}).
+This chapter shows where that design lives in code, what
+non-trivial implementation choices were made while wiring it, and
+where the running system diverged from the plan
+(\S\ref{sec:impl-deviations}). Every row of
+Figure~\ref{fig:design-decisions} maps to at least one module or
+identifiable block listed in \S\ref{sec:impl-layout}; the four
+hardest blocks (provider asymmetry, JSON hardening, null-aware
+comparison, failure diagnosis) each get a screenshot in
+\S\S\ref{sec:impl-provider}--\ref{sec:impl-evaldiag}.
+
+% ------------------------------------------------------------
+\section{Repository layout}
+\label{sec:impl-layout}
+
+The runtime is a single Python package under \texttt{src/} plus a
+thin \texttt{cli.py} entry point. Together they are about
+\texttt{2,700} lines. Evaluation, LLM adapters, and OCR sit in
+subpackages so the pipeline imports a stable surface
+(\texttt{DatasetLoader}, \texttt{get\_provider}, \texttt{run\_pipeline},
+\texttt{evaluate\_run}, \texttt{compare\_runs},
+\texttt{generate\_report}). The test tree under \texttt{tests/}
+contains \texttt{531} test functions across twelve files
+(\S\ref{sec:impl-testing}). Configuration and the zero-shot prompt
+live outside the package at \texttt{config/default.yaml} and
+\texttt{prompts/extraction\_v1.txt} so a run can be replayed from
+artefacts without re-reading the source.
+
+Figure~\ref{fig:impl-tree} evidences a single package root with no
+parallel ``evaluation copy'' of the schema: the same
+\texttt{BillExtraction} type is imported by the pipeline, both
+providers, and the evaluator. Individual file purposes and line
+counts are not readable from a tree alone.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-1-project-tree.png}{%
+      Screenshot: project tree (\texttt{src/}, \texttt{tests/},
+      \texttt{config/}, \texttt{prompts/}, \texttt{cli.py}).}
+    \caption{Repository layout. Runtime code under \texttt{src/};
+    tests mirror module names.}
+    \label{fig:impl-tree}
+\end{figure}
+
+A per-module inventory (path, purpose, key symbols, approximate
+line count) will be tabulated when the appendices are finalised.
+\apxref{B.1}
+
+% ------------------------------------------------------------
+\section{Data contract}
+\label{sec:impl-schema}
+
+\texttt{BillExtraction} is a Pydantic v2 \texttt{BaseModel} with
+twelve optional fields and a class-level \texttt{SCHEMA\_FIELDS}
+list that fixes iteration order for evaluation and reporting.
+\texttt{schema\_description()} builds the bullet list injected into
+the prompt at \texttt{\{schema\_description\}}; the same strings
+appear nowhere else, so a field rename is a single edit.
+
+The first implementation attempt used Pydantic v1 because the
+course template did not pin a version. OpenAI's Structured Outputs
+call (\texttt{text\_format=BillExtraction}) failed to emit a valid
+JSON schema from the model class. Pinning Pydantic
+\texttt{\textgreater=2.0} in \texttt{requirements.txt} and
+migrating the model to v2 metadata fixed the failure in one step.
+The alternative, dropping Structured Outputs and parsing JSON by
+hand for OpenAI too, was rejected because it would remove the
+strongest guarantee on the modality comparison's OpenAI arm.
+
+Figure~\ref{fig:impl-schema} shows only the canonical iteration order
+\texttt{SCHEMA\_FIELDS}: the design point is that evaluation, reporting,
+and the prompt builder all walk the same ordered list. The twelve
+\texttt{Optional} field declarations and \texttt{schema\_description()}
+live in the same file but are omitted here to keep the crop short.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-2-schema.png}{%
+      Tight crop: \texttt{src/schema.py} lines 33--46
+      (\texttt{SCHEMA\_FIELDS} list).}
+    \caption{Canonical field order for iteration (\texttt{src/schema.py}).}
+    \label{fig:impl-schema}
+\end{figure}
+
+\apxref{C.1}
+
+% ------------------------------------------------------------
+\section{Manifest-driven loading}
+\label{sec:impl-loader}
+
+\texttt{DatasetLoader.load\_and\_validate} chains six steps: read
+CSV, assert required columns, reject duplicate
+\texttt{document\_id}, validate cell values (language, utility type,
+status, integer \texttt{page\_count}), filter to
+\texttt{active} rows with \texttt{annotated} and \texttt{verified}
+true, resolve PDF and ground-truth paths, then assert both files
+exist. An early prototype collapsed validation into one function
+that returned only the first error string. That made large
+manifests painful to debug because a row with a bad language code
+and a missing PDF looked like a single generic failure. Splitting
+the chain keeps each failure mode attributable to one stage, which
+is what reproducibility audits need when a row is rejected.
+
+Figure~\ref{fig:impl-loader} shows the ordered call chain inside
+\texttt{load\_and\_validate}: the design point is staged validation so
+each failure mode maps to one step. Helper implementations
+(\texttt{\_read\_csv}, \texttt{\_validate\_columns}, and the rest) are
+not shown in the crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-3-loader.png}{%
+      Tight crop: \texttt{src/dataset\_loader.py} lines 55--61
+      (sequential validation chain).}
+    \caption{Staged manifest validation (\texttt{src/dataset\_loader.py}).}
+    \label{fig:impl-loader}
+\end{figure}
+
+\apxref{C.2}
+
+% ------------------------------------------------------------
+\section{Provider strategy in code}
+\label{sec:impl-provider}
+
+\subsection{Abstract contract}
+
+\texttt{LLMProvider} defines \texttt{extract\_from\_text},
+\texttt{extract\_from\_image}, and \texttt{get\_model\_id}. Both
+extraction methods return the same dict shape so
+\texttt{pipeline.py} never branches on provider name. The prompt is
+always the rendered instruction; OCR text or image bytes are
+passed as the user payload only, which keeps token counts stable
+when the instruction is long.
+
+Figure~\ref{fig:impl-llm-abc} shows the text-mode abstract signature and
+its return-shape contract: the design point is that both modalities
+must return the same dict keys so \texttt{pipeline.py} stays
+provider-agnostic. The vision abstract and shared helpers are omitted
+from the crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-4-llm-abc.png}{%
+      Tight crop: \texttt{src/llm/base.py} lines 45--58
+      (\texttt{extract\_from\_text} signature and Returns block).}
+    \caption{Provider contract for text mode (\texttt{src/llm/base.py}).}
+    \label{fig:impl-llm-abc}
+\end{figure}
+
+\apxref{C.3}
+
+\subsection{OpenAI: Responses API and Structured Outputs}
+
+\texttt{OpenAIProvider} calls \texttt{responses.parse} with
+\texttt{text\_format=BillExtraction}. The API returns text that
+already matches the schema; the pipeline still runs
+\texttt{\_parse\_llm\_json} for uniformity, but the happy path is a
+single \texttt{json.loads} on a clean string. This is the direct
+code realisation of the ``Structured output handling'' row in
+Figure~\ref{fig:design-decisions}.
+
+Figure~\ref{fig:impl-openai-text} isolates the Structured Outputs call:
+\texttt{instructions=prompt} and a user message carrying
+\texttt{ocr\_text} split rules from data, matching
+Chapter~\ref{chap:design}. Latency wrapping and result assembly are
+not shown.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-5-openai-text.png}{%
+      Tight crop: \texttt{src/llm/openai\_provider.py} lines 63--74
+      (\texttt{responses.parse} with \texttt{text\_format=BillExtraction}).}
+    \caption{OpenAI text mode with Structured Outputs
+    (\texttt{src/llm/openai\_provider.py}).}
+    \label{fig:impl-openai-text}
+\end{figure}
+
+\apxref{C.4}
+
+\subsection{Anthropic: Messages API and fence stripping}
+
+\texttt{AnthropicProvider} uses \texttt{messages.create} with the
+same rendered prompt as the system message and OCR text or image
+blocks as the user message. There is no Structured Outputs hook
+for this schema, so \texttt{\_strip\_json\_fencing} removes
+\texttt{```json ... ```} wrappers before the shared parser runs;
+that helper is small enough to describe in prose only. Provider-specific
+cleaning stops here; anything that survives a malformed fence still
+hits the four-stage chain in \S\ref{sec:impl-pipeline}.
+
+Figure~\ref{fig:impl-anthropic-text} shows the text-mode API call only:
+\texttt{system=prompt} mirrors OpenAI's split of instruction versus
+payload. Vision mode and \texttt{\_build\_result} are omitted from the
+crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-6-anthropic-text.png}{%
+      Tight crop: \texttt{src/llm/anthropic\_provider.py} lines 75--88
+      (\texttt{messages.create} for text mode).}
+    \caption{Anthropic text mode (\texttt{src/llm/anthropic\_provider.py}).}
+    \label{fig:impl-anthropic-text}
+\end{figure}
+
+\apxref{C.5}
+
+\subsection{Registry and lazy import}
+
+\texttt{registry.py} maps string keys to dotted class paths and
+imports the class only when \texttt{get\_provider} runs. That means
+a host configured for OpenAI never imports \texttt{anthropic}, which
+matters when only one SDK is installed. Adding a third provider is
+one new module plus one line in \texttt{\_PROVIDERS}.
+
+Figure~\ref{fig:impl-registry} shows only the string-to-class map: the
+design point is that adding a provider is one dictionary entry plus
+one module. \texttt{get\_provider}, lazy import, and constructor wiring
+are left to the appendix listing.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-7-registry.png}{%
+      Tight crop: \texttt{src/llm/registry.py} lines 16--19
+      (\texttt{\_PROVIDERS}).}
+    \caption{Provider registry map (\texttt{src/llm/registry.py}).}
+    \label{fig:impl-registry}
+\end{figure}
+
+\apxref{C.6}
+
+% ------------------------------------------------------------
+\section{Pipeline orchestration}
+\label{sec:impl-pipeline}
+
+\texttt{\_process\_document} wraps each stage in
+\texttt{Timer} from \texttt{src/performance.py}. The keys written to
+\texttt{timings.json} (\texttt{pdf\_to\_images\_ms},
+\texttt{ocr\_ms}, \texttt{llm\_call\_ms},
+\texttt{parse\_normalise\_ms}, \texttt{total\_ms}) match the design
+sequence diagram (Figure~\ref{fig:design-seq}). Vision mode uses a
+zero-millisecond placeholder timer for OCR so downstream reporting
+can still sum columns without branching on key presence.
+
+Figure~\ref{fig:impl-pipeline-core} shows both arms of the modality
+split: OCR-then-\texttt{extract\_from\_text} versus vision-then
+\texttt{extract\_from\_image}, including the zero-millisecond OCR timer
+placeholder in vision mode. Stage~4 parse, timings assembly, artefact
+writes, and cost estimation sit below the crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-8-pipeline-core.png}{%
+      Tight crop: \texttt{src/pipeline.py} lines 133--150
+      (\texttt{if mode == "ocr\_text"} and \texttt{else} vision branch).}
+    \caption{OCR and vision modality branches inside
+    \texttt{\_process\_document} (\texttt{src/pipeline.py}).}
+    \label{fig:impl-pipeline-core}
+\end{figure}
+
+\texttt{\_parse\_llm\_json} implements the four-stage hardening
+chain from Figure~\ref{fig:design-parse}: direct
+\texttt{json.loads}, fenced-block strip, brace-balanced substring
+extraction, then \texttt{ValueError} with a 500-character excerpt.
+The chain never calls the model again, which preserves the same
+post-LLM processing path for every modality and provider, supporting
+modality isolation (ER1).
+
+Figure~\ref{fig:impl-json-parse} shows the docstring plus stage~1 only:
+the design point is the ordered fallback chain (direct parse, fence
+strip, brace-balanced substring, then a bounded \texttt{ValueError}
+excerpt). Stages~2--4 are visible in the full function in the appendix.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-9-json-parse.png}{%
+      Tight crop: \texttt{src/pipeline.py} lines 54--67
+      (\texttt{\_parse\_llm\_json} docstring and first parse attempt).}
+    \caption{JSON hardening contract and stage~1 (\texttt{src/pipeline.py}).}
+    \label{fig:impl-json-parse}
+\end{figure}
+
+\texttt{run\_pipeline} snapshots \texttt{config.yaml}, the manifest,
+and \texttt{prompt.txt} into the run directory, then iterates
+documents with resume-by-default (\texttt{extraction.json} skip)
+and per-document \texttt{try}/\texttt{except} that writes
+\texttt{error.json} on failure. That is the mechanical realisation of
+NFR1 (configuration and prompt snapshots), NFR3 (per-document error
+isolation), and ER4 (artefacts sufficient to reconstruct the run)
+from Chapter~\ref{chap:spec}.
+
+\apxref{C.7}
+
+% ------------------------------------------------------------
+\section{Normalisation}
+\label{sec:impl-normalisation}
+
+\texttt{FIELD\_NORMALISERS} maps each schema field name to a
+function. \texttt{normalise\_extraction} walks that map so adding a
+field touches one Pydantic attribute and one table entry, not a
+switch statement scattered across three files.
+
+\texttt{\_parse\_numeric\_string} disambiguates European
+(\texttt{1.234,56}) and US (\texttt{1,234.56}) formats by the
+relative order of the last comma and dot, not by locale, because LLM
+output does not carry locale metadata. That is a concrete
+implementation bet: wrong guess on ambiguous \texttt{12,34} is
+possible, but bills in the dataset rarely use two-digit
+``thousands'' groups without a third group.
+
+Figure~\ref{fig:impl-normalisers} shows the dispatch table only: the
+design point is that new fields add one Pydantic attribute and one
+table row instead of a scattered \texttt{if} chain. The EU/US numeric
+parser and per-field normaliser bodies are described above and listed
+in full in the appendix.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-10-normalisers.png}{%
+      Tight crop: \texttt{src/normalisation.py} lines 317--332
+      (\texttt{FIELD\_NORMALISERS}).}
+    \caption{Dispatch-table normalisation (\texttt{src/normalisation.py}).}
+    \label{fig:impl-normalisers}
+\end{figure}
+
+\apxref{C.8}
+
+% ------------------------------------------------------------
+\section{Evaluation and diagnosis}
+\label{sec:impl-evaldiag}
+
+\texttt{compare\_field} resolves the null 2$\times$2 table before
+any value comparison, then applies type-specific rules: $\pm$0.01
+tolerance on money and consumption floats, exact string match on
+ISO dates after normalisation, exact match on other strings with a
+Levenshtein ratio stored alongside for inspection only (pass or
+fail remains exact match).
+
+Figure~\ref{fig:impl-compare-field} shows \texttt{compare\_field} from
+its signature through line~124: null flags, the full 2$\times$2 null
+table, then the float and date arms and the opening of the string
+\texttt{else}. The figure uses a compact layout for the null returns;
+the string-comparison body, the \texttt{category} assignment, and the
+final \texttt{return FieldResult} sit below the crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-11-compare-field.png}{%
+      Tight crop: \texttt{src/evaluation/metrics.py} lines 70--124
+      (\texttt{compare\_field}: null table and typed branches).}
+    \caption{Null-aware field comparison (\texttt{src/evaluation/metrics.py}).}
+    \label{fig:impl-compare-field}
+\end{figure}
+
+\apxref{C.9}
+
+\texttt{diagnose\_document} reads \texttt{ocr\_text.txt} for
+\texttt{ocr\_text} mode and applies the substring heuristic from
+Chapter~\ref{chap:design}, which is the automated half of ER5
+(failure attribution in OCR-mediated conditions). Vision mode labels
+every non-correct field as \texttt{vision\_model\_failure}. The
+implementation writes \texttt{diagnosis.json} only when the CLI passes
+\texttt{--diagnose}, so batch runs stay cheap by default while FR6
+remains available on demand.
+
+Figure~\ref{fig:impl-diagnosis} shows the OCR-mode loop only: the
+condition \texttt{fr.ground\_truth is None or \_value\_in\_text(...)}
+means a missing ground-truth string skips substring search and is
+labelled \texttt{llm\_extraction\_failure} (hallucination), while a
+present ground truth is checked against \texttt{ocr\_text.txt} to
+split OCR loss from LLM mis-read. Vision-mode diagnosis and JSON
+serialisation are not in the crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-12-diagnosis.png}{%
+      Tight crop: \texttt{src/evaluation/diagnosis.py} lines 62--73
+      (OCR-mode \texttt{failure\_type} assignment).}
+    \caption{OCR-mode failure attribution (\texttt{src/evaluation/diagnosis.py}).}
+    \label{fig:impl-diagnosis}
+\end{figure}
+
+\apxref{C.10}
+
+% ------------------------------------------------------------
+\section{Deviations from the design}
+\label{sec:impl-deviations}
+
+Three deviations were anticipated in
+\S\ref{sec:design-maintenance}; all three appear in the code paths
+above. First, OpenAI and Anthropic use different APIs and different
+output guarantees; that asymmetry is visible in
+Figures~\ref{fig:impl-openai-text} and~\ref{fig:impl-anthropic-text}.
+Second, wall-clock latency is always measured with \texttt{Timer}
+around the pipeline stages; provider-reported latency fields are
+not trusted for aggregation. Third, \texttt{TesseractOCR} catches
+\texttt{TesseractError} and returns empty text so a missing
+language pack degrades to an OCR-side failure mode that diagnosis
+can label.
+
+Two additional deviations surfaced during implementation. Fourth,
+\texttt{compare\_field} records a Levenshtein ratio for string
+fields but still classifies pass or fail on exact equality only.
+The design text in Chapter~\ref{chap:design} mentioned similarity
+for inspection; the code matches that: the ratio is persisted in
+\texttt{evaluation.json} for analysis but does not change the
+four-class label. Fifth, per-model USD pricing for
+\texttt{estimate\_cost} lives in a hard-coded dict inside
+\texttt{src/performance.py} rather than in \texttt{config.yaml}.
+The trade is reproducibility from a single checkout: a marker who
+checks out the same commit sees the same price table that produced
+the run's \texttt{estimated\_cost\_usd}. Moving prices to YAML
+would be a small refactor if billing rates need frequent edits.
+
+None of these five items change the factorial structure, the null
+taxonomy, or the modality-isolation boundary that the evaluation
+chapter will test.
+
+% ------------------------------------------------------------
+\section{Testing}
+\label{sec:impl-testing}
+
+Tests are organised one file per module, with class names that read
+as behaviour contracts (\texttt{TestNormaliseDateShouldParseKnownFormats},
+\texttt{TestMissingColumnsShouldRaise}, and similar).
+There are \texttt{531} \texttt{def test\_*} functions across the
+twelve files; the densest files are
+\texttt{test\_evaluation.py}, \texttt{test\_pipeline.py},
+\texttt{test\_normalisation.py}, and \texttt{test\_dataset\_loader.py}.
+
+Figure~\ref{fig:impl-tests} is a two-panel composite: the left crop
+shows the parametrised date table (positive coverage in one place);
+the right crop shows assertions on \texttt{error.json} after bad LLM
+JSON (pipeline resilience). Other test modules are referenced only in
+prose.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-13-tests.png}{%
+      Two crops: \texttt{tests/test\_normalisation.py} lines 34--45;
+      \texttt{tests/test\_pipeline.py} lines 576--582.}
+    \caption{Representative tests: parametrised dates and
+    \texttt{error.json} on parse failure.}
+    \label{fig:impl-tests}
+\end{figure}
+
+\apxref{C.11}
+
+% ------------------------------------------------------------
+\section{Running a condition end to end}
+\label{sec:impl-running}
+
+The surface area is four Click commands:
+\texttt{run}, \texttt{evaluate}, \texttt{compare}, \texttt{report}.
+\texttt{run} deep-merges CLI overrides into YAML, executes
+\texttt{run\_pipeline}, and prints the run directory path.
+\texttt{evaluate} writes \texttt{evaluation.json};
+\texttt{--diagnose} adds \texttt{diagnosis.json} per document.
+\texttt{compare} builds \texttt{comparison.json} for the four cells
+of the $2 \times 2$ design. \texttt{report} reads
+\texttt{comparison.json} and writes the six chart PNGs plus
+\texttt{summary.txt} described in Chapter~\ref{chap:spec}.
+
+Figure~\ref{fig:impl-run-cli} shows terminal output from
+\texttt{python cli.py run ...} or, if API keys are not configured,
+\texttt{python cli.py --help}. The design point is a single Click group
+with four subcommands; option wiring and imports are not visible in a
+terminal crop.
+
+\begin{figure}[ht]
+    \centering
+    \implscreenshot{Chapters/figures/fig-6-14-run-cli.png}{%
+      Screenshot: terminal, \texttt{python cli.py run ...} (or
+      \texttt{python cli.py --help}).}
+    \caption{CLI execution: run pipeline or command help
+    (\texttt{cli.py}).}
+    \label{fig:impl-run-cli}
+\end{figure}
+
+\apxref{C.12}
+
+% ------------------------------------------------------------
+\section{Dependency and maintenance recap}
+\label{sec:impl-maintenance}
+
+Runtime Python dependencies are listed in \texttt{requirements.txt}:
+\texttt{pydantic}, \texttt{pyyaml}, \texttt{pdf2image},
+\texttt{Pillow}, \texttt{pytesseract}, \texttt{openai},
+\texttt{anthropic}, \texttt{python-Levenshtein}, \texttt{click},
+\texttt{matplotlib}, \texttt{seaborn}, \texttt{pandas},
+\texttt{psutil}, \texttt{pytest}, \texttt{python-dotenv}. System
+binaries still required on the host are Poppler (for
+\texttt{pdf2image}) and Tesseract with language packs
+\texttt{eng}, \texttt{deu}, \texttt{fra}, \texttt{ita}. Extensibility
+remains the three one-touch additions from
+Chapter~\ref{chap:design}: new provider module plus registry line;
+new \texttt{OCREngine} subclass; new schema field plus normaliser
+entry.
+
+% ------------------------------------------------------------
+\section{Summary and forward bridge}
+\label{sec:impl-summary}
+
+This chapter mapped the ten design decisions of
+Figure~\ref{fig:design-decisions} to concrete modules and showed the
+five bounded deviations in \S\ref{sec:impl-deviations}. The
+implementation is about \texttt{2,700} lines of runtime Python and
+\texttt{531} tests, with disk artefacts and CLI commands
+that make a full condition reproducible from a checkout plus a run
+directory snapshot.
+
+Two experimental requirements from Chapter~\ref{chap:spec} anchor
+the narrative above. ER1 (modality isolation: same reasoning engine,
+prompt template, and post-processing across modalities within a
+provider row) is realised by the single shared
+\texttt{\_process\_document} path after rasterisation
+(\S\ref{sec:impl-pipeline}), the shared \texttt{\_parse\_llm\_json}
+and normalisation stages, and the identical \texttt{BillExtraction}
+contract for both providers (\S\S\ref{sec:impl-schema}--\ref{sec:impl-normalisation}).
+ER4 (reproducibility: every run archives configuration, manifest,
+prompt, and per-document artefacts) is realised by
+\texttt{run\_pipeline}'s directory snapshots and outputs
+(\S\ref{sec:impl-pipeline}), which \texttt{tests/test\_pipeline.py}
+exercises together with resume and error paths.
+
+Chapter~\ref{chap:evaluation} executes the $2 \times 2$ experiment,
+reports accuracy, cost, and latency by condition, slices results by
+language and utility type, and returns to the rejected alternatives
+in Figure~\ref{fig:design-decisions} to compare predicted outcomes
+with observed ones.
