@@ -1,41 +1,41 @@
 document_id,language,utility_type,provider,digital_native,page_count,annotated,verified,status
 gb_electricity_ovo_001,en,electricity,OVO Energy,true,3,true,true,active
-gb_water_thameswater_001,en,water,Thames Water,true,6,true,true,excluded
-it_electricity_lupatotina_001,it,electricity,Lupatotina Gas e Luce SRL,true,8,true,true,excluded
-it_gas_lupatotina_001,it,gas,Lupatotina Gas e Luce SRL,true,1,true,true,excluded
+gb_water_thameswater_001,en,water,Thames Water,true,6,true,true,active
+it_electricity_lupatotina_001,it,electricity,Lupatotina Gas e Luce SRL,true,8,true,true,active
+it_gas_lupatotina_001,it,gas,Lupatotina Gas e Luce SRL,true,1,true,true,active
 it_water_acqueveronesi_001,it,water,Acque Veronesi,true,4,true,true,active
 fr_electricity_iberdrolaenergiefran_001,fr,electricity,IBERDROLA ENERGIE FRANCE,true,2,true,true,active
 de_electricity_vattenfalleuropesale_001,de,electricity,Vattenfall Europe Sales,true,4,true,true,active
 au_electricity_agl_001,en,electricity,AGL,true,3,true,true,active
-it_electricity_enigaseluce_001,it,electricity,Eni gas e luce,true,5,true,true,excluded
-it_gas_edison_001,it,gas,EDISON,true,2,true,true,excluded
+it_electricity_enigaseluce_001,it,electricity,Eni gas e luce,true,5,true,true,active
+it_gas_edison_001,it,gas,EDISON,true,2,true,true,active
 it_electricity_engie_001,it,electricity,ENGIE,true,3,true,true,active
-us_electricity_publicservicecompany_001,en,electricity,Public Service Company of Colorado,true,4,true,true,excluded
-de_water_stadtwerkebadhomburg_001,de,water,Stadtwerke Bad Homburg,true,5,true,true,excluded
-it_electricity_irenmercato_001,it,electricity,IREN MERCATO,true,6,true,true,excluded
-de_electricity_stadtwerkeholzminden_001,de,electricity,Stadtwerke Holzminden,true,4,true,true,excluded
+us_electricity_publicservicecompany_001,en,electricity,Public Service Company of Colorado,true,4,true,true,active
+de_water_stadtwerkebadhomburg_001,de,water,Stadtwerke Bad Homburg,true,5,true,true,active
+it_electricity_irenmercato_001,it,electricity,IREN MERCATO,true,6,true,true,active
+de_electricity_stadtwerkeholzminden_001,de,electricity,Stadtwerke Holzminden,true,4,true,true,active
 de_gas_greenplanetenergy_001,de,gas,Green Planet Energy,true,8,true,true,active
-de_gas_greenplanetenergy_002,de,gas,Green Planet Energy,true,8,true,true,excluded
-de_electricity_zmainfranken_001,de,electricity,ÜZ Mainfranken,true,4,true,true,excluded
+de_gas_greenplanetenergy_002,de,gas,Green Planet Energy,true,8,true,true,active
+de_electricity_zmainfranken_001,de,electricity,ÜZ Mainfranken,true,4,true,true,active
 de_electricity_naturstromhandel_001,de,electricity,NaturStromHandel,true,8,true,true,active
-gb_water_affinitywater_001,en,water,Affinity Water,true,4,true,true,excluded
-gb_water_affinitywater_002,en,water,Affinity Water,true,6,true,true,excluded
-au_electricity_originenergy_001,en,electricity,Origin Energy,true,2,true,true,excluded
-us_gas_peoplesgas_001,en,gas,Peoples Gas,true,1,true,true,excluded
-us_gas_michigangasutilities_001,en,gas,Michigan Gas Utilities,true,1,true,true,excluded
-us_electricity_centralhudson_001,en,electricity,Central Hudson,true,3,true,true,excluded
-us_electricity_pge_001,en,electricity,PG&E,true,6,true,true,excluded
-us_electricity_conedison_001,en,electricity,Con Edison,true,3,true,true,excluded
+gb_water_affinitywater_001,en,water,Affinity Water,true,4,true,true,active
+gb_water_affinitywater_002,en,water,Affinity Water,true,6,true,true,active
+au_electricity_originenergy_001,en,electricity,Origin Energy,true,2,true,true,active
+us_gas_peoplesgas_001,en,gas,Peoples Gas,true,1,true,true,active
+us_gas_michigangasutilities_001,en,gas,Michigan Gas Utilities,true,1,true,true,active
+us_electricity_centralhudson_001,en,electricity,Central Hudson,true,3,true,true,active
+us_electricity_pge_001,en,electricity,PG&E,true,6,true,true,active
+us_electricity_conedison_001,en,electricity,Con Edison,true,3,true,true,active
 ca_electricity_bchydro_001,en,electricity,BC Hydro,true,2,true,true,active
-ca_electricity_bchydro_002,en,electricity,BC Hydro,true,2,true,true,excluded
-ca_electricity_bchydro_003,en,electricity,BC Hydro,true,2,true,true,excluded
-ca_electricity_bchydro_004,en,electricity,BC Hydro,true,4,true,true,excluded
-us_electricity_conedison_002,en,electricity,Con Edison,true,3,true,true,excluded
-us_water_clarkregionalwastewa_001,en,water,Clark Regional Wastewater District,true,2,true,true,excluded
-us_electricity_pge_002,en,electricity,PG&E,true,5,true,true,excluded
-de_electricity_stwbstadtwerkebrande_001,de,electricity,StWB Stadtwerke Brandenburg an der Havel,true,3,true,true,excluded
-de_electricity_vattenfalleuropesale_002,de,electricity,Vattenfall Europe Sales,true,7,true,true,excluded
-gb_electricity_eonenergysolutions_001,en,electricity,E.ON Energy Solutions,true,2,true,true,excluded
-de_electricity_stadtwerkepirnaenerg_001,de,electricity,Stadtwerke Pirna Energie,true,4,true,true,excluded
+ca_electricity_bchydro_002,en,electricity,BC Hydro,true,2,true,true,active
+ca_electricity_bchydro_003,en,electricity,BC Hydro,true,2,true,true,active
+ca_electricity_bchydro_004,en,electricity,BC Hydro,true,4,true,true,active
+us_electricity_conedison_002,en,electricity,Con Edison,true,3,true,true,active
+us_water_clarkregionalwastewa_001,en,water,Clark Regional Wastewater District,true,2,true,true,active
+us_electricity_pge_002,en,electricity,PG&E,true,5,true,true,active
+de_electricity_stwbstadtwerkebrande_001,de,electricity,StWB Stadtwerke Brandenburg an der Havel,true,3,true,true,active
+de_electricity_vattenfalleuropesale_002,de,electricity,Vattenfall Europe Sales,true,7,true,true,active
+gb_electricity_eonenergysolutions_001,en,electricity,E.ON Energy Solutions,true,2,true,true,active
+de_electricity_stadtwerkepirnaenerg_001,de,electricity,Stadtwerke Pirna Energie,true,4,true,true,active
 de_water_einhornenergie_001,de,water,EINHORN-ENERGIE,true,3,true,true,active
-de_electricity_enbwostwrttembergdon_001,de,electricity,EnBW Ostwürttemberg DonauRies,true,4,true,true,excluded
+de_electricity_enbwostwrttembergdon_001,de,electricity,EnBW Ostwürttemberg DonauRies,true,4,true,true,active
